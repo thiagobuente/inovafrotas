@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuditoriaRouteImport } from './routes/auditoria'
 import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as FrotaRouteImport } from './routes/frota'
 import { Route as GestaoRouteImport } from './routes/gestao'
 import { Route as PainelRouteImport } from './routes/painel'
 import { Route as SolicitarRouteImport } from './routes/solicitar'
@@ -20,9 +22,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditoriaRoute = AuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntrarRoute = EntrarRouteImport.update({
   id: '/entrar',
   path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FrotaRoute = FrotaRouteImport.update({
+  id: '/frota',
+  path: '/frota',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GestaoRoute = GestaoRouteImport.update({
@@ -43,14 +55,18 @@ const SolicitarRoute = SolicitarRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auditoria': typeof AuditoriaRoute
   '/entrar': typeof EntrarRoute
+  '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
   '/painel': typeof PainelRoute
   '/solicitar': typeof SolicitarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auditoria': typeof AuditoriaRoute
   '/entrar': typeof EntrarRoute
+  '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
   '/painel': typeof PainelRoute
   '/solicitar': typeof SolicitarRoute
@@ -58,22 +74,48 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auditoria': typeof AuditoriaRoute
   '/entrar': typeof EntrarRoute
+  '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
   '/painel': typeof PainelRoute
   '/solicitar': typeof SolicitarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/entrar' | '/gestao' | '/painel' | '/solicitar'
+  fullPaths:
+    | '/'
+    | '/auditoria'
+    | '/entrar'
+    | '/frota'
+    | '/gestao'
+    | '/painel'
+    | '/solicitar'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/entrar' | '/gestao' | '/painel' | '/solicitar'
-  id: '__root__' | '/' | '/entrar' | '/gestao' | '/painel' | '/solicitar'
+  to:
+    | '/'
+    | '/auditoria'
+    | '/entrar'
+    | '/frota'
+    | '/gestao'
+    | '/painel'
+    | '/solicitar'
+  id:
+    | '__root__'
+    | '/'
+    | '/auditoria'
+    | '/entrar'
+    | '/frota'
+    | '/gestao'
+    | '/painel'
+    | '/solicitar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuditoriaRoute: typeof AuditoriaRoute
   EntrarRoute: typeof EntrarRoute
+  FrotaRoute: typeof FrotaRoute
   GestaoRoute: typeof GestaoRoute
   PainelRoute: typeof PainelRoute
   SolicitarRoute: typeof SolicitarRoute
@@ -88,11 +130,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auditoria': {
+      id: '/auditoria'
+      path: '/auditoria'
+      fullPath: '/auditoria'
+      preLoaderRoute: typeof AuditoriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entrar': {
       id: '/entrar'
       path: '/entrar'
       fullPath: '/entrar'
       preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/frota': {
+      id: '/frota'
+      path: '/frota'
+      fullPath: '/frota'
+      preLoaderRoute: typeof FrotaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gestao': {
@@ -121,7 +177,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuditoriaRoute: AuditoriaRoute,
   EntrarRoute: EntrarRoute,
+  FrotaRoute: FrotaRoute,
   GestaoRoute: GestaoRoute,
   PainelRoute: PainelRoute,
   SolicitarRoute: SolicitarRoute,

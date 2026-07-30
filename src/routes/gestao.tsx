@@ -77,10 +77,24 @@ function GestaoPage() {
     },
   });
 
+  const { data: drivers } = useQuery({
+    queryKey: ["drivers-available"],
+    enabled: Boolean(auth.user) && auth.isManager,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("drivers")
+        .select("id, full_name, license_category, status")
+        .order("full_name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   async function decide(
     id: string,
     status: "approved" | "rejected",
     vehicleId: string | null,
+    driverId: string | null,
     note: string,
   ) {
     if (status === "approved" && !vehicleId) {
@@ -96,6 +110,7 @@ function GestaoPage() {
       .update({
         status,
         assigned_vehicle_id: status === "approved" ? vehicleId : null,
+        assigned_driver_id: status === "approved" ? driverId : null,
         decision_note: note.trim() || null,
         decided_by: auth.user!.id,
         decided_at: new Date().toISOString(),
@@ -108,6 +123,7 @@ function GestaoPage() {
     toast.success(status === "approved" ? "Solicitação autorizada." : "Solicitação recusada.");
     queryClient.invalidateQueries({ queryKey: ["all-requests"] });
   }
+
 
   if (!auth.loading && auth.user && !auth.isManager) {
     return (
@@ -153,6 +169,7 @@ function GestaoPage() {
                 key={r.id}
                 request={r}
                 vehicles={vehicles ?? []}
+                drivers={drivers ?? []}
                 onDecide={decide}
               />
             ))}
@@ -172,22 +189,34 @@ type VehicleRow = {
   status: string;
 };
 
+type DriverRow = {
+  id: string;
+  full_name: string;
+  license_category: string;
+  status: string;
+};
+
 function RequestCard({
   request,
   vehicles,
+  drivers,
   onDecide,
 }: {
   request: Record<string, any>;
   vehicles: VehicleRow[];
+  drivers: DriverRow[];
   onDecide: (
     id: string,
     status: "approved" | "rejected",
     vehicleId: string | null,
+    driverId: string | null,
     note: string,
   ) => Promise<void>;
 }) {
   const [vehicleId, setVehicleId] = useState<string>("");
+  const [driverId, setDriverId] = useState<string>("");
   const [note, setNote] = useState("");
+
 
   return (
     <article className="surface-panel p-6">
@@ -261,6 +290,25 @@ function RequestCard({
               </Select>
             </div>
             <div className="space-y-2">
+              <Label>
+                Designar motorista {request.needs_driver ? "(solicitado)" : "(opcional)"}
+              </Label>
+              <Select value={driverId} onValueChange={setDriverId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o motorista" />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers
+                    .filter((d) => d.status === "available")
+                    .map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.full_name} (cat. {d.license_category})
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 sm:col-span-2">
               <Label>Observação / motivo</Label>
               <Textarea
                 rows={2}
@@ -273,15 +321,20 @@ function RequestCard({
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button onClick={() => onDecide(request.id, "approved", vehicleId || null, note)}>
+            <Button
+              onClick={() =>
+                onDecide(request.id, "approved", vehicleId || null, driverId || null, note)
+              }
+            >
               Autorizar
             </Button>
             <Button
               variant="destructive"
-              onClick={() => onDecide(request.id, "rejected", null, note)}
+              onClick={() => onDecide(request.id, "rejected", null, null, note)}
             >
               Recusar
             </Button>
+
           </div>
         </div>
       )}
