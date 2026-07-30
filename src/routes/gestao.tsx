@@ -118,7 +118,28 @@ function GestaoPage() {
           <p className="mt-3 text-sm text-muted-foreground">
             Esta área é exclusiva do perfil de gestor de frota.
           </p>
+          <div className="mt-6">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                const { data, error } = await supabase.rpc("claim_first_manager");
+                if (error) {
+                  toast.error("Não foi possível assumir a gestão: " + error.message);
+                  return;
+                }
+                if (data) {
+                  toast.success("Perfil de gestor ativado. Recarregando…");
+                  window.location.reload();
+                } else {
+                  toast.error("Já existe um gestor de frota definido.");
+                }
+              }}
+            >
+              Assumir gestão da frota (primeiro gestor)
+            </Button>
+          </div>
         </main>
+
       </div>
     );
   }
