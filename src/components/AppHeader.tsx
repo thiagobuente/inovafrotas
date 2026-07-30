@@ -12,8 +12,9 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
   const links = [
     { to: "/painel", label: "Minhas solicitações" },
     { to: "/solicitar", label: "Nova solicitação" },
-    { to: "/gestao", label: "Autorizações" },
+    ...(auth.isManager ? [{ to: "/gestao", label: "Autorizações" }] : []),
   ];
+
 
   async function signOut() {
     await supabase.auth.signOut();
