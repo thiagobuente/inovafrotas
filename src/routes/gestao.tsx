@@ -169,6 +169,7 @@ function GestaoPage() {
                 key={r.id}
                 request={r}
                 vehicles={vehicles ?? []}
+                drivers={drivers ?? []}
                 onDecide={decide}
               />
             ))}
@@ -188,22 +189,34 @@ type VehicleRow = {
   status: string;
 };
 
+type DriverRow = {
+  id: string;
+  full_name: string;
+  license_category: string;
+  status: string;
+};
+
 function RequestCard({
   request,
   vehicles,
+  drivers,
   onDecide,
 }: {
   request: Record<string, any>;
   vehicles: VehicleRow[];
+  drivers: DriverRow[];
   onDecide: (
     id: string,
     status: "approved" | "rejected",
     vehicleId: string | null,
+    driverId: string | null,
     note: string,
   ) => Promise<void>;
 }) {
   const [vehicleId, setVehicleId] = useState<string>("");
+  const [driverId, setDriverId] = useState<string>("");
   const [note, setNote] = useState("");
+
 
   return (
     <article className="surface-panel p-6">
