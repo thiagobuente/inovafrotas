@@ -12,7 +12,7 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
   const links = [
     { to: "/painel", label: "Minhas solicitações" },
     { to: "/solicitar", label: "Nova solicitação" },
-    ...(auth.isManager ? [{ to: "/gestao", label: "Autorizações" }] : []),
+    { to: "/gestao", label: "Autorizações" },
   ];
 
   async function signOut() {
