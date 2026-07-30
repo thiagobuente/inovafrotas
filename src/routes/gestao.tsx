@@ -290,6 +290,25 @@ function RequestCard({
               </Select>
             </div>
             <div className="space-y-2">
+              <Label>
+                Designar motorista {request.needs_driver ? "(solicitado)" : "(opcional)"}
+              </Label>
+              <Select value={driverId} onValueChange={setDriverId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o motorista" />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers
+                    .filter((d) => d.status === "available")
+                    .map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.full_name} (cat. {d.license_category})
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 sm:col-span-2">
               <Label>Observação / motivo</Label>
               <Textarea
                 rows={2}
@@ -302,15 +321,20 @@ function RequestCard({
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button onClick={() => onDecide(request.id, "approved", vehicleId || null, note)}>
+            <Button
+              onClick={() =>
+                onDecide(request.id, "approved", vehicleId || null, driverId || null, note)
+              }
+            >
               Autorizar
             </Button>
             <Button
               variant="destructive"
-              onClick={() => onDecide(request.id, "rejected", null, note)}
+              onClick={() => onDecide(request.id, "rejected", null, null, note)}
             >
               Recusar
             </Button>
+
           </div>
         </div>
       )}
