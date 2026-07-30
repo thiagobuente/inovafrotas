@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as GestaoRouteImport } from './routes/gestao'
 import { Route as PainelRouteImport } from './routes/painel'
 import { Route as SolicitarRouteImport } from './routes/solicitar'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const EntrarRoute = EntrarRouteImport.update({
   id: '/entrar',
   path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GestaoRoute = GestaoRouteImport.update({
+  id: '/gestao',
+  path: '/gestao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PainelRoute = PainelRouteImport.update({
@@ -38,12 +44,14 @@ const SolicitarRoute = SolicitarRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
+  '/gestao': typeof GestaoRoute
   '/painel': typeof PainelRoute
   '/solicitar': typeof SolicitarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
+  '/gestao': typeof GestaoRoute
   '/painel': typeof PainelRoute
   '/solicitar': typeof SolicitarRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/entrar': typeof EntrarRoute
+  '/gestao': typeof GestaoRoute
   '/painel': typeof PainelRoute
   '/solicitar': typeof SolicitarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/entrar' | '/painel' | '/solicitar'
+  fullPaths: '/' | '/entrar' | '/gestao' | '/painel' | '/solicitar'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/entrar' | '/painel' | '/solicitar'
-  id: '__root__' | '/' | '/entrar' | '/painel' | '/solicitar'
+  to: '/' | '/entrar' | '/gestao' | '/painel' | '/solicitar'
+  id: '__root__' | '/' | '/entrar' | '/gestao' | '/painel' | '/solicitar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EntrarRoute: typeof EntrarRoute
+  GestaoRoute: typeof GestaoRoute
   PainelRoute: typeof PainelRoute
   SolicitarRoute: typeof SolicitarRoute
 }
@@ -83,6 +93,13 @@ declare module '@tanstack/react-router' {
       path: '/entrar'
       fullPath: '/entrar'
       preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gestao': {
+      id: '/gestao'
+      path: '/gestao'
+      fullPath: '/gestao'
+      preLoaderRoute: typeof GestaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/painel': {
@@ -105,6 +122,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EntrarRoute: EntrarRoute,
+  GestaoRoute: GestaoRoute,
   PainelRoute: PainelRoute,
   SolicitarRoute: SolicitarRoute,
 }
