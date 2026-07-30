@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          changes: Json | null
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          ip_address: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          ip_address?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          ip_address?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      drivers: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          license_category: string
+          license_number: string
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          license_category?: string
+          license_number: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          license_category?: string
+          license_number?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -38,6 +107,56 @@ export type Database = {
         }
         Relationships: []
       }
+      trip_logs: {
+        Row: {
+          created_at: string
+          created_by: string
+          departure_at: string | null
+          departure_km: number | null
+          fuel_liters: number | null
+          id: string
+          incidents: string | null
+          request_id: string
+          return_at: string | null
+          return_km: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          departure_at?: string | null
+          departure_km?: number | null
+          fuel_liters?: number | null
+          id?: string
+          incidents?: string | null
+          request_id: string
+          return_at?: string | null
+          return_km?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          departure_at?: string | null
+          departure_km?: number | null
+          fuel_liters?: number | null
+          id?: string
+          incidents?: string | null
+          request_id?: string
+          return_at?: string | null
+          return_km?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_logs_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "vehicle_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -59,6 +178,7 @@ export type Database = {
       vehicle_requests: {
         Row: {
           agenda: string
+          assigned_driver_id: string | null
           assigned_vehicle_id: string | null
           created_at: string
           decided_at: string | null
@@ -79,6 +199,7 @@ export type Database = {
         }
         Insert: {
           agenda: string
+          assigned_driver_id?: string | null
           assigned_vehicle_id?: string | null
           created_at?: string
           decided_at?: string | null
@@ -99,6 +220,7 @@ export type Database = {
         }
         Update: {
           agenda?: string
+          assigned_driver_id?: string | null
           assigned_vehicle_id?: string | null
           created_at?: string
           decided_at?: string | null
@@ -118,6 +240,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "vehicle_requests_assigned_driver_id_fkey"
+            columns: ["assigned_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vehicle_requests_assigned_vehicle_id_fkey"
             columns: ["assigned_vehicle_id"]
