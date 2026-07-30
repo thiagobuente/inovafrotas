@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { AppHeader } from "@/components/AppHeader";
+import { TripLogPanel } from "@/components/TripLogPanel";
+
 import { useSeiaAuth, STATUS_LABELS, STATUS_TONE, formatDateTime } from "@/lib/seia";
 import { cn } from "@/lib/utils";
 
@@ -132,6 +134,7 @@ function PainelPage() {
               {r.vehicles && (
                 <p className="mt-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
                   Veículo designado: {r.vehicles.brand} {r.vehicles.model} · {r.vehicles.plate}
+                  {r.drivers ? ` · Motorista: ${r.drivers.full_name}` : ""}
                 </p>
               )}
               {r.status === "rejected" && r.decision_note && (
@@ -147,8 +150,11 @@ function PainelPage() {
                   </Button>
                 </div>
               )}
+
+              {r.status === "approved" && <TripLogPanel requestId={r.id} />}
             </article>
           ))}
+
         </div>
       </main>
     </div>
