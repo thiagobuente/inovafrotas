@@ -77,10 +77,24 @@ function GestaoPage() {
     },
   });
 
+  const { data: drivers } = useQuery({
+    queryKey: ["drivers-available"],
+    enabled: Boolean(auth.user) && auth.isManager,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("drivers")
+        .select("id, full_name, license_category, status")
+        .order("full_name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   async function decide(
     id: string,
     status: "approved" | "rejected",
     vehicleId: string | null,
+    driverId: string | null,
     note: string,
   ) {
     if (status === "approved" && !vehicleId) {
@@ -96,6 +110,7 @@ function GestaoPage() {
       .update({
         status,
         assigned_vehicle_id: status === "approved" ? vehicleId : null,
+        assigned_driver_id: status === "approved" ? driverId : null,
         decision_note: note.trim() || null,
         decided_by: auth.user!.id,
         decided_at: new Date().toISOString(),
@@ -108,6 +123,7 @@ function GestaoPage() {
     toast.success(status === "approved" ? "Solicitação autorizada." : "Solicitação recusada.");
     queryClient.invalidateQueries({ queryKey: ["all-requests"] });
   }
+
 
   if (!auth.loading && auth.user && !auth.isManager) {
     return (
