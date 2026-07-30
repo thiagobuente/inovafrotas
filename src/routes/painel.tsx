@@ -44,12 +44,15 @@ function PainelPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vehicle_requests")
-        .select("*, vehicles:assigned_vehicle_id (plate, brand, model)")
+        .select(
+          "*, vehicles:assigned_vehicle_id (plate, brand, model), drivers:assigned_driver_id (full_name, phone)",
+        )
         .eq("requester_id", auth.user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
+
   });
 
   async function cancelRequest(id: string) {
