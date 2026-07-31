@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { AppHeader } from "@/components/AppHeader";
 import { useSeiaAuth, isInstitutionalEmail, EMAIL_DOMAIN } from "@/lib/seia";
+import { sendNotification } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/solicitar")({
   head: () => ({
@@ -37,6 +39,7 @@ function SolicitarPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [needsDriver, setNeedsDriver] = useState(false);
+  const notify = useServerFn(sendNotification);
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
@@ -72,7 +75,9 @@ function SolicitarPage() {
     }
 
     setBusy(true);
-    const { error } = await supabase.from("vehicle_requests").insert({
+    const { data: created, error } = await supabase
+      .from("vehicle_requests")
+      .insert({
       requester_id: user.id,
       requester_email: user.email.toLowerCase(),
       agenda: String(form.get("agenda")).trim(),
@@ -81,13 +86,29 @@ function SolicitarPage() {
       return_at: new Date(ret).toISOString(),
       passengers_count: Number(form.get("passengers_count") || 1),
       needs_driver: needsDriver,
-      notes: String(form.get("notes") || "").trim() || null,
-    });
+        notes: String(form.get("notes") || "").trim() || null,
+      })
+      .select("protocol, requester_email, destination, agenda, pickup_at, return_at")
+      .single();
     setBusy(false);
 
     if (error) {
       toast.error("Não foi possível registrar: " + error.message);
       return;
+    }
+    if (created) {
+      void notify({
+        data: {
+          type: "request_created",
+          protocol: created.protocol,
+          requesterEmail: created.requester_email,
+          destination: created.destination,
+          agenda: created.agenda,
+          pickupAt: created.pickup_at,
+          returnAt: created.return_at,
+          status: "pending",
+        },
+      }).catch(() => undefined);
     }
     toast.success("Solicitação enviada para autorização do gestor.");
     navigate({ to: "/painel" });

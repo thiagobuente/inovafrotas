@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppHeader } from "@/components/AppHeader";
 import { useSeiaAuth, STATUS_LABELS, STATUS_TONE, formatDateTime } from "@/lib/seia";
 import { cn } from "@/lib/utils";
+import { sendNotification } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/gestao")({
   head: () => ({
@@ -44,6 +46,7 @@ function GestaoPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState("pending");
+  const notify = useServerFn(sendNotification);
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
@@ -91,7 +94,7 @@ function GestaoPage() {
   });
 
   async function decide(
-    id: string,
+    request: Record<string, any>,
     status: "approved" | "rejected",
     vehicleId: string | null,
     driverId: string | null,
@@ -115,11 +118,32 @@ function GestaoPage() {
         decided_by: auth.user!.id,
         decided_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", request.id);
     if (error) {
       toast.error("Não foi possível registrar a decisão: " + error.message);
       return;
     }
+    const vehicle = (vehicles ?? []).find((v) => v.id === vehicleId);
+    const driver = (drivers ?? []).find((d) => d.id === driverId);
+    void notify({
+      data: {
+        type: status === "approved" ? "request_approved" : "request_rejected",
+        protocol: request.protocol,
+        requesterEmail: request.requester_email,
+        destination: request.destination,
+        agenda: request.agenda,
+        pickupAt: request.pickup_at,
+        returnAt: request.return_at,
+        vehicleLabel:
+          status === "approved" && vehicle
+            ? `${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`
+            : null,
+        driverLabel: status === "approved" && driver ? driver.full_name : null,
+        note: note.trim() || null,
+        previousStatus: request.status,
+        status,
+      },
+    }).catch(() => undefined);
     toast.success(status === "approved" ? "Solicitação autorizada." : "Solicitação recusada.");
     queryClient.invalidateQueries({ queryKey: ["all-requests"] });
   }
@@ -206,7 +230,7 @@ function RequestCard({
   vehicles: VehicleRow[];
   drivers: DriverRow[];
   onDecide: (
-    id: string,
+    request: Record<string, any>,
     status: "approved" | "rejected",
     vehicleId: string | null,
     driverId: string | null,
@@ -323,14 +347,14 @@ function RequestCard({
           <div className="flex flex-wrap gap-3">
             <Button
               onClick={() =>
-                onDecide(request.id, "approved", vehicleId || null, driverId || null, note)
+                onDecide(request, "approved", vehicleId || null, driverId || null, note)
               }
             >
               Autorizar
             </Button>
             <Button
               variant="destructive"
-              onClick={() => onDecide(request.id, "rejected", null, null, note)}
+              onClick={() => onDecide(request, "rejected", null, null, note)}
             >
               Recusar
             </Button>
