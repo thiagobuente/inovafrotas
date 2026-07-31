@@ -83,6 +83,48 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_logs: {
+        Row: {
+          audience: string
+          created_at: string
+          event_type: string
+          id: string
+          protocol: string
+          provider: string
+          reason: string | null
+          recipient: string
+          requester_email: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          audience: string
+          created_at?: string
+          event_type: string
+          id?: string
+          protocol: string
+          provider: string
+          reason?: string | null
+          recipient: string
+          requester_email?: string | null
+          status: string
+          subject: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          protocol?: string
+          provider?: string
+          reason?: string | null
+          recipient?: string
+          requester_email?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

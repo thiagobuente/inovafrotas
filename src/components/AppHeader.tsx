@@ -16,6 +16,7 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
       ? [
           { to: "/gestao", label: "Autorizações" },
           { to: "/frota", label: "Frota" },
+          { to: "/notificacoes", label: "Notificações" },
           { to: "/auditoria", label: "Auditoria" },
         ]
       : []),

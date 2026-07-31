@@ -14,6 +14,7 @@ import { Route as AuditoriaRouteImport } from './routes/auditoria'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as FrotaRouteImport } from './routes/frota'
 import { Route as GestaoRouteImport } from './routes/gestao'
+import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as PainelRouteImport } from './routes/painel'
 import { Route as SolicitarRouteImport } from './routes/solicitar'
 
@@ -42,6 +43,11 @@ const GestaoRoute = GestaoRouteImport.update({
   path: '/gestao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificacoesRoute = NotificacoesRouteImport.update({
+  id: '/notificacoes',
+  path: '/notificacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PainelRoute = PainelRouteImport.update({
   id: '/painel',
   path: '/painel',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
+  '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
   '/solicitar': typeof SolicitarRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
+  '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
   '/solicitar': typeof SolicitarRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
+  '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
   '/solicitar': typeof SolicitarRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/frota'
     | '/gestao'
+    | '/notificacoes'
     | '/painel'
     | '/solicitar'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/frota'
     | '/gestao'
+    | '/notificacoes'
     | '/painel'
     | '/solicitar'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/frota'
     | '/gestao'
+    | '/notificacoes'
     | '/painel'
     | '/solicitar'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   EntrarRoute: typeof EntrarRoute
   FrotaRoute: typeof FrotaRoute
   GestaoRoute: typeof GestaoRoute
+  NotificacoesRoute: typeof NotificacoesRoute
   PainelRoute: typeof PainelRoute
   SolicitarRoute: typeof SolicitarRoute
 }
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GestaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notificacoes': {
+      id: '/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof NotificacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/painel': {
       id: '/painel'
       path: '/painel'
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   EntrarRoute: EntrarRoute,
   FrotaRoute: FrotaRoute,
   GestaoRoute: GestaoRoute,
+  NotificacoesRoute: NotificacoesRoute,
   PainelRoute: PainelRoute,
   SolicitarRoute: SolicitarRoute,
 }
