@@ -11,12 +11,13 @@ class LovableEmailProvider implements NotificationProvider {
   readonly name = "lovable-email";
 
   isReady() {
-    return Boolean(process.env.SEIA_EMAIL_FROM);
+    return Boolean(process.env.SEIA_EMAIL_FROM && process.env.LOVABLE_API_KEY);
   }
 
   async send(message: NotificationMessage): Promise<DeliveryResult> {
     const from = process.env.SEIA_EMAIL_FROM;
-    if (!from) {
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!from || !apiKey) {
       return {
         to: message.to,
         audience: message.audience,
@@ -27,14 +28,18 @@ class LovableEmailProvider implements NotificationProvider {
     }
     try {
       const { sendLovableEmail } = await import("@lovable.dev/email-js");
-      await sendLovableEmail({
-        from,
-        to: message.to,
-        subject: message.subject,
-        html: message.html,
-        text: message.text,
-      } as never);
+      await sendLovableEmail(
+        {
+          from,
+          to: message.to,
+          subject: message.subject,
+          html: message.html,
+          text: message.text,
+        },
+        { apiKey },
+      );
       return { to: message.to, audience: message.audience, status: "sent", provider: this.name };
+
     } catch (error) {
       return {
         to: message.to,
