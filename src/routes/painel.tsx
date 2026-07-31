@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { AppHeader } from "@/components/AppHeader";
 import { TripLogPanel } from "@/components/TripLogPanel";
+import { sendNotification } from "@/lib/notifications.functions";
 
 import { useSeiaAuth, STATUS_LABELS, STATUS_TONE, formatDateTime } from "@/lib/seia";
 import { cn } from "@/lib/utils";
@@ -35,6 +37,7 @@ function PainelPage() {
   const auth = useSeiaAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const notify = useServerFn(sendNotification);
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
@@ -57,16 +60,29 @@ function PainelPage() {
 
   });
 
-  async function cancelRequest(id: string) {
+  async function cancelRequest(request: Record<string, any>) {
     const { error } = await supabase
       .from("vehicle_requests")
       .update({ status: "cancelled" })
-      .eq("id", id);
+      .eq("id", request.id);
     if (error) {
       toast.error("Não foi possível cancelar: " + error.message);
       return;
     }
     toast.success("Solicitação cancelada.");
+    void notify({
+      data: {
+        type: "request_cancelled",
+        protocol: request.protocol,
+        requesterEmail: request.requester_email,
+        destination: request.destination,
+        agenda: request.agenda,
+        pickupAt: request.pickup_at,
+        returnAt: request.return_at,
+        previousStatus: "pending",
+        status: "cancelled",
+      },
+    }).catch(() => undefined);
     queryClient.invalidateQueries({ queryKey: ["my-requests"] });
   }
 
@@ -145,7 +161,7 @@ function PainelPage() {
 
               {r.status === "pending" && (
                 <div className="mt-5">
-                  <Button variant="outline" size="sm" onClick={() => cancelRequest(r.id)}>
+                  <Button variant="outline" size="sm" onClick={() => cancelRequest(r)}>
                     Cancelar solicitação
                   </Button>
                 </div>
