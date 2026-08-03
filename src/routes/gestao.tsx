@@ -199,15 +199,39 @@ function GestaoPage() {
       <AppHeader auth={auth} />
       <main className="mx-auto max-w-5xl px-4 py-12">
         <h1 className="text-2xl font-semibold">Autorização de solicitações</h1>
+        <h1 className="text-2xl font-semibold">Painel de aprovações</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Analise a demanda, designe o veículo e registre a decisão.
+          Analise a demanda, designe veículo e motorista e registre a decisão.
         </p>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          {(["pending", "approved", "rejected"] as const).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key)}
+              className={cn(
+                "surface-panel p-5 text-left transition-colors",
+                tab === key ? "ring-2 ring-primary" : "hover:bg-muted/40",
+              )}
+            >
+              <p className="text-sm text-muted-foreground">
+                {key === "pending" ? "Pendentes" : key === "approved" ? "Aprovadas" : "Recusadas"}
+              </p>
+              <p className="mt-1 text-3xl font-semibold">{counts?.[key] ?? 0}</p>
+            </button>
+          ))}
+        </div>
 
         <Tabs value={tab} onValueChange={setTab} className="mt-8">
           <TabsList>
-            <TabsTrigger value="pending">Pendentes</TabsTrigger>
-            <TabsTrigger value="all">Todas</TabsTrigger>
+            {MANAGER_TABS.map((t) => (
+              <TabsTrigger key={t.value} value={t.value}>
+                {t.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
+
 
           <TabsContent value={tab} className="mt-6 space-y-4">
             {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
