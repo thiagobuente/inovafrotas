@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -49,7 +49,32 @@ export const Route = createFileRoute("/gestao")({
     ],
   }),
   component: GestaoPage,
+  errorComponent: GestaoError,
 });
+
+function GestaoError({ error, reset }: { error: Error; reset: () => void }) {
+  const router = useRouter();
+  return (
+    <div className="min-h-screen">
+      <main className="mx-auto max-w-xl px-4 py-24 text-center">
+        <h1 className="text-2xl font-semibold">Não foi possível carregar o painel</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {error?.message || "Erro inesperado ao processar a autorização."}
+        </p>
+        <Button
+          className="mt-6"
+          onClick={() => {
+            router.invalidate();
+            reset();
+          }}
+        >
+          Tentar novamente
+        </Button>
+      </main>
+    </div>
+  );
+}
+
 
 function GestaoPage() {
   const auth = useSeiaAuth();
@@ -127,54 +152,70 @@ function GestaoPage() {
     driverId: string | null,
     note: string,
   ) {
-    if (status === "approved" && !vehicleId) {
-      toast.error("Selecione um veículo para autorizar.");
-      return;
+    try {
+      if (status === "approved" && !vehicleId) {
+        toast.error("Selecione um veículo para autorizar.");
+        return;
+      }
+      if (status === "rejected" && !note.trim()) {
+        toast.error("Informe o motivo da recusa.");
+        return;
+      }
+      const managerId = auth.user?.id;
+      if (!managerId) {
+        toast.error("Sessão expirada. Entre novamente para registrar a decisão.");
+        navigate({ to: "/entrar", replace: true });
+        return;
+      }
+      const { error } = await supabase
+        .from("vehicle_requests")
+        .update({
+          status,
+          assigned_vehicle_id: status === "approved" ? vehicleId : null,
+          assigned_driver_id: status === "approved" ? driverId : null,
+          decision_note: note.trim() || null,
+          decided_by: managerId,
+          decided_at: new Date().toISOString(),
+        })
+        .eq("id", request.id);
+      if (error) {
+        toast.error("Não foi possível registrar a decisão: " + error.message);
+        return;
+      }
+      const vehicle = (vehicles ?? []).find((v) => v.id === vehicleId);
+      const driver = (drivers ?? []).find((d) => d.id === driverId);
+      void Promise.resolve(
+        notify({
+          data: {
+            type: status === "approved" ? "request_approved" : "request_rejected",
+            protocol: request.protocol,
+            requesterEmail: request.requester_email,
+            destination: request.destination,
+            agenda: request.agenda,
+            pickupAt: request.pickup_at,
+            returnAt: request.return_at,
+            vehicleLabel:
+              status === "approved" && vehicle
+                ? `${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`
+                : null,
+            driverLabel: status === "approved" && driver ? driver.full_name : null,
+            note: note.trim() || null,
+            previousStatus: request.status,
+            status,
+          },
+        }),
+      ).catch(() => undefined);
+      toast.success(status === "approved" ? "Solicitação autorizada." : "Solicitação recusada.");
+      queryClient.invalidateQueries({ queryKey: ["all-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["request-counts"] });
+    } catch (err) {
+      toast.error(
+        "Não foi possível registrar a decisão: " +
+          (err instanceof Error ? err.message : "erro inesperado"),
+      );
     }
-    if (status === "rejected" && !note.trim()) {
-      toast.error("Informe o motivo da recusa.");
-      return;
-    }
-    const { error } = await supabase
-      .from("vehicle_requests")
-      .update({
-        status,
-        assigned_vehicle_id: status === "approved" ? vehicleId : null,
-        assigned_driver_id: status === "approved" ? driverId : null,
-        decision_note: note.trim() || null,
-        decided_by: auth.user!.id,
-        decided_at: new Date().toISOString(),
-      })
-      .eq("id", request.id);
-    if (error) {
-      toast.error("Não foi possível registrar a decisão: " + error.message);
-      return;
-    }
-    const vehicle = (vehicles ?? []).find((v) => v.id === vehicleId);
-    const driver = (drivers ?? []).find((d) => d.id === driverId);
-    void notify({
-      data: {
-        type: status === "approved" ? "request_approved" : "request_rejected",
-        protocol: request.protocol,
-        requesterEmail: request.requester_email,
-        destination: request.destination,
-        agenda: request.agenda,
-        pickupAt: request.pickup_at,
-        returnAt: request.return_at,
-        vehicleLabel:
-          status === "approved" && vehicle
-            ? `${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`
-            : null,
-        driverLabel: status === "approved" && driver ? driver.full_name : null,
-        note: note.trim() || null,
-        previousStatus: request.status,
-        status,
-      },
-    }).catch(() => undefined);
-    toast.success(status === "approved" ? "Solicitação autorizada." : "Solicitação recusada.");
-    queryClient.invalidateQueries({ queryKey: ["all-requests"] });
-    queryClient.invalidateQueries({ queryKey: ["request-counts"] });
   }
+
 
 
   if (!auth.loading && auth.user && !auth.isManager) {
