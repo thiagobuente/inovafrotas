@@ -1,0 +1,1 @@
+DELETE FROM public.vehicle_requests WHERE destination IN ('Curitiba - Teste','Conflito A','Conflito B');
