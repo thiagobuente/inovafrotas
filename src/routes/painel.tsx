@@ -47,6 +47,7 @@ export const Route = createFileRoute("/painel")({
 function PainelPage() {
   const auth = useSeiaAuth();
   const navigate = useNavigate();
+  const { status } = Route.useSearch();
   const queryClient = useQueryClient();
   const notify = useServerFn(sendNotification);
 
@@ -55,21 +56,23 @@ function PainelPage() {
   }, [auth.loading, auth.user, navigate]);
 
   const { data: requests, isLoading } = useQuery({
-    queryKey: ["my-requests", auth.user?.id],
+    queryKey: ["my-requests", auth.user?.id, status],
     enabled: Boolean(auth.user),
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("vehicle_requests")
         .select(
           "*, vehicles:assigned_vehicle_id (plate, brand, model), drivers:assigned_driver_id (full_name, phone)",
         )
         .eq("requester_id", auth.user!.id)
         .order("created_at", { ascending: false });
+      if (status !== "all") query = query.eq("status", status as "pending");
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
-
   });
+
 
   async function cancelRequest(request: Record<string, any>) {
     const { error } = await supabase
