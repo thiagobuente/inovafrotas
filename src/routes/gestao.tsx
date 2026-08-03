@@ -20,7 +20,17 @@ import { useSeiaAuth, STATUS_LABELS, STATUS_TONE, formatDateTime } from "@/lib/s
 import { cn } from "@/lib/utils";
 import { sendNotification } from "@/lib/notifications.functions";
 
+const MANAGER_TABS = [
+  { value: "pending", label: "Pendentes" },
+  { value: "approved", label: "Aprovadas" },
+  { value: "rejected", label: "Recusadas" },
+  { value: "all", label: "Todas" },
+] as const;
+
 export const Route = createFileRoute("/gestao")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    status: typeof search.status === "string" ? search.status : "pending",
+  }),
   head: () => ({
     meta: [
       { title: "Autorização de veículos — SEIA Gestor" },
