@@ -87,7 +87,7 @@ function Index() {
                 <div className="mt-7 inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-4 py-2 text-sm font-medium">
                   <BellRing className="size-4 shrink-0" />
                   {pendingCount > 0
-                    ? `Você tem ${pendingCount} solicitação${pendingCount > 1 ? "ões" : ""} aguardando autorização`
+                    ? `Você tem ${pendingCount} ${pendingCount > 1 ? "solicitações" : "solicitação"} aguardando autorização`
                     : "Nenhuma solicitação pendente no momento"}
                 </div>
               )}
