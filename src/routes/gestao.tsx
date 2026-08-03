@@ -396,6 +396,40 @@ function RequestCard({
             </div>
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+              Ações rápidas
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                const first = vehicles.find((v) => v.status === "available");
+                if (!first) {
+                  toast.error("Nenhum veículo disponível na frota.");
+                  return;
+                }
+                setVehicleId(first.id);
+                void onDecide(request, "approved", first.id, driverId || null, note);
+              }}
+            >
+              Autorizar com 1º veículo livre
+            </Button>
+            {["Frota indisponível no período", "Dados insuficientes na solicitação"].map((reason) => (
+              <Button
+                key={reason}
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNote(reason);
+                  void onDecide(request, "rejected", null, null, reason);
+                }}
+              >
+                Recusar: {reason}
+              </Button>
+            ))}
+          </div>
+
           <div className="flex flex-wrap gap-3">
             <Button
               onClick={() =>
@@ -410,8 +444,8 @@ function RequestCard({
             >
               Recusar
             </Button>
-
           </div>
+
         </div>
       )}
     </article>
