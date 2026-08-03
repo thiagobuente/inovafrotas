@@ -55,12 +55,15 @@ function GestaoPage() {
   const auth = useSeiaAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState("pending");
+  const { status: tab } = Route.useSearch();
   const notify = useServerFn(sendNotification);
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
   }, [auth.loading, auth.user, navigate]);
+
+  const setTab = (value: string) =>
+    navigate({ to: "/gestao", search: { status: value }, replace: true });
 
   const { data: requests, isLoading } = useQuery({
     queryKey: ["all-requests", tab],
@@ -68,14 +71,28 @@ function GestaoPage() {
     queryFn: async () => {
       let query = supabase
         .from("vehicle_requests")
-        .select("*, vehicles:assigned_vehicle_id (plate, brand, model)")
+        .select("*, vehicles:assigned_vehicle_id (plate, brand, model), drivers:assigned_driver_id (full_name)")
         .order("created_at", { ascending: false });
-      if (tab === "pending") query = query.eq("status", "pending");
+      if (tab !== "all") query = query.eq("status", tab as "pending");
       const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
+
+  const { data: counts } = useQuery({
+    queryKey: ["request-counts"],
+    enabled: Boolean(auth.user) && auth.isManager,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("vehicle_requests").select("status");
+      if (error) throw error;
+      return (data ?? []).reduce<Record<string, number>>((acc, row) => {
+        acc[row.status] = (acc[row.status] ?? 0) + 1;
+        return acc;
+      }, {});
+    },
+  });
+
 
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles-all"],
