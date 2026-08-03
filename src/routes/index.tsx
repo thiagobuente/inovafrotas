@@ -84,12 +84,16 @@ function Index() {
               </p>
 
               {auth.user && typeof pendingCount === "number" && (
-                <div className="mt-7 inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-4 py-2 text-sm font-medium">
+                <Link
+                  to="/painel"
+                  search={{ status: pendingCount > 0 ? "pending" : "all" }}
+                  className="mt-7 inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-4 py-2 text-sm font-medium underline-offset-4 transition-colors hover:bg-primary-foreground/25 hover:underline"
+                >
                   <BellRing className="size-4 shrink-0" />
                   {pendingCount > 0
                     ? `Você tem ${pendingCount} ${pendingCount > 1 ? "solicitações" : "solicitação"} aguardando autorização`
                     : "Nenhuma solicitação pendente no momento"}
-                </div>
+                </Link>
               )}
 
               <div className="mt-8 flex flex-wrap gap-3">
