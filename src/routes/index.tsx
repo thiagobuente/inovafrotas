@@ -78,10 +78,6 @@ function Index() {
               <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-5xl">
                 Agendamento de Veículos SEIA
               </h1>
-              <p className="mt-5 max-w-xl text-base opacity-90">
-                O servidor registra a demanda com o e-mail institucional e o gestor de frota
-                autorizado designa o veículo disponível.
-              </p>
 
               {auth.user && typeof pendingCount === "number" && (
                 <Link
