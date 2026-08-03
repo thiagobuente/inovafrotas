@@ -152,6 +152,74 @@ function FrotaPage() {
     queryClient.invalidateQueries({ queryKey: ["vehicles-manage"] });
   }
 
+  async function saveDriver(id: string, values: DriverForm) {
+    if (!values.full_name.trim() || !values.license_number.trim()) {
+      toast.error("Informe nome e número da CNH.");
+      return false;
+    }
+    const { error } = await supabase
+      .from("drivers")
+      .update({
+        full_name: values.full_name.trim(),
+        license_number: values.license_number.trim(),
+        license_category: values.license_category,
+        phone: values.phone.trim() || null,
+      })
+      .eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    toast.success("Motorista atualizado.");
+    queryClient.invalidateQueries({ queryKey: ["drivers"] });
+    return true;
+  }
+
+  async function removeDriver(id: string) {
+    if (!window.confirm("Excluir este motorista definitivamente?")) return;
+    const { error } = await supabase.from("drivers").delete().eq("id", id);
+    if (error)
+      return toast.error(
+        "Não foi possível excluir: o motorista está vinculado a solicitações. Marque como indisponível.",
+      );
+    toast.success("Motorista excluído.");
+    queryClient.invalidateQueries({ queryKey: ["drivers"] });
+  }
+
+  async function saveVehicle(id: string, values: VehicleForm) {
+    if (!values.plate.trim() || !values.brand.trim() || !values.model.trim()) {
+      toast.error("Informe placa, marca e modelo.");
+      return false;
+    }
+    const { error } = await supabase
+      .from("vehicles")
+      .update({
+        plate: values.plate.trim().toUpperCase(),
+        brand: values.brand.trim(),
+        model: values.model.trim(),
+        capacity: Number(values.capacity) || 5,
+      })
+      .eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    toast.success("Veículo atualizado.");
+    queryClient.invalidateQueries({ queryKey: ["vehicles-manage"] });
+    return true;
+  }
+
+  async function removeVehicle(id: string) {
+    if (!window.confirm("Excluir este veículo definitivamente?")) return;
+    const { error } = await supabase.from("vehicles").delete().eq("id", id);
+    if (error)
+      return toast.error(
+        "Não foi possível excluir: o veículo está vinculado a solicitações. Marque como inativo.",
+      );
+    toast.success("Veículo excluído.");
+    queryClient.invalidateQueries({ queryKey: ["vehicles-manage"] });
+  }
+
   if (!auth.loading && auth.user && !auth.isManager) {
     return (
       <div className="min-h-screen">
