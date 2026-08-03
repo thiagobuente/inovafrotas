@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CarFront, ShieldCheck, ClipboardList, MailCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { CarFront, ShieldCheck, ClipboardList, MailCheck, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppHeader } from "@/components/AppHeader";
+import { supabase } from "@/integrations/supabase/client";
+import heroFleet from "@/assets/frota-hero.png";
 import { useSeiaAuth, EMAIL_DOMAIN } from "@/lib/seia";
 
 export const Route = createFileRoute("/")({
@@ -47,43 +50,93 @@ const steps = [
 function Index() {
   const auth = useSeiaAuth();
 
+  const { data: pendingCount } = useQuery({
+    queryKey: ["pending-count", auth.user?.id],
+    enabled: Boolean(auth.user),
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("vehicle_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("requester_id", auth.user!.id)
+        .eq("status", "pending");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
   return (
     <div className="min-h-screen">
       <AppHeader auth={auth} />
 
       <main>
         <section className="bg-gradient-brand text-primary-foreground">
-          <div className="mx-auto max-w-6xl px-4 py-20">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] opacity-80">
-              Sistema Integrado de Agendamentos
-            </p>
-            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight md:text-5xl">
-              Solicite veículos da frota e receba a autorização do gestor
-            </h1>
-            <p className="mt-5 max-w-xl text-base opacity-90">
-              Fluxo simples e rastreável: o servidor registra a demanda com o e-mail
-              institucional e o gestor de frota autoriza, designando o veículo disponível.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="secondary">
-                <Link to={auth.user ? "/solicitar" : "/entrar"}>
-                  <CarFront className="size-5" />
-                  {auth.user ? "Nova solicitação" : "Entrar com e-mail institucional"}
-                </Link>
-              </Button>
-              {auth.user && (
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="border-primary-foreground/40 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
-                >
-                  <Link to="/painel">Acompanhar solicitações</Link>
-                </Button>
+          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+            <div className="min-w-0">
+              <p className="text-sm font-medium uppercase tracking-[0.2em] opacity-80">
+                Sistema de Agendamento de Veículos
+              </p>
+              <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-5xl">
+                Agendamento de Veículos SEIA
+              </h1>
+              <p className="mt-5 max-w-xl text-base opacity-90">
+                Fluxo simples e rastreável: o servidor registra a demanda com o e-mail
+                institucional e o gestor de frota autoriza, designando o veículo disponível.
+              </p>
+
+              {auth.user && typeof pendingCount === "number" && (
+                <div className="mt-7 inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-4 py-2 text-sm font-medium">
+                  <BellRing className="size-4 shrink-0" />
+                  {pendingCount > 0
+                    ? `Você tem ${pendingCount} ${pendingCount > 1 ? "solicitações" : "solicitação"} aguardando autorização`
+                    : "Nenhuma solicitação pendente no momento"}
+                </div>
               )}
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button asChild size="lg" variant="secondary">
+                  <Link to={auth.user ? "/solicitar" : "/entrar"}>
+                    <CarFront className="size-5" />
+                    {auth.user ? "Nova solicitação" : "Entrar com e-mail institucional"}
+                  </Link>
+                </Button>
+                {auth.user && (
+                  <Button
+                    asChild
+                    size="lg"
+                    variant="outline"
+                    className="border-2 border-primary-foreground/70 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/25 hover:text-primary-foreground"
+                  >
+                    <Link to="/painel">
+                      <ClipboardList className="size-5" />
+                      Acompanhar solicitações
+                    </Link>
+                  </Button>
+                )}
+              </div>
+
+              <p className="mt-5 text-sm opacity-80">
+                <Link
+                  to={auth.isManager ? "/gestao" : "/entrar"}
+                  className="inline-flex items-center gap-2 underline underline-offset-4 hover:opacity-100"
+                >
+                  <ShieldCheck className="size-4" />
+                  Acesso do Gestor · Painel de Aprovações
+                </Link>
+              </p>
+            </div>
+
+            <div className="hidden lg:block">
+              <img
+                src={heroFleet}
+                alt="Ilustração da frota institucional de veículos do SEIA"
+                width={1024}
+                height={768}
+                className="w-full drop-shadow-2xl"
+              />
             </div>
           </div>
         </section>
+
 
         <section className="mx-auto max-w-6xl px-4 py-16">
           <h2 className="text-2xl font-semibold">Como funciona</h2>
