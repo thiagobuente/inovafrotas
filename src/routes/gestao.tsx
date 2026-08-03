@@ -20,7 +20,17 @@ import { useSeiaAuth, STATUS_LABELS, STATUS_TONE, formatDateTime } from "@/lib/s
 import { cn } from "@/lib/utils";
 import { sendNotification } from "@/lib/notifications.functions";
 
+const MANAGER_TABS = [
+  { value: "pending", label: "Pendentes" },
+  { value: "approved", label: "Aprovadas" },
+  { value: "rejected", label: "Recusadas" },
+  { value: "all", label: "Todas" },
+] as const;
+
 export const Route = createFileRoute("/gestao")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    status: typeof search.status === "string" ? search.status : "pending",
+  }),
   head: () => ({
     meta: [
       { title: "Autorização de veículos — SEIA Gestor" },
@@ -45,12 +55,15 @@ function GestaoPage() {
   const auth = useSeiaAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState("pending");
+  const { status: tab } = Route.useSearch();
   const notify = useServerFn(sendNotification);
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
   }, [auth.loading, auth.user, navigate]);
+
+  const setTab = (value: string) =>
+    navigate({ to: "/gestao", search: { status: value }, replace: true });
 
   const { data: requests, isLoading } = useQuery({
     queryKey: ["all-requests", tab],
@@ -58,14 +71,28 @@ function GestaoPage() {
     queryFn: async () => {
       let query = supabase
         .from("vehicle_requests")
-        .select("*, vehicles:assigned_vehicle_id (plate, brand, model)")
+        .select("*, vehicles:assigned_vehicle_id (plate, brand, model), drivers:assigned_driver_id (full_name)")
         .order("created_at", { ascending: false });
-      if (tab === "pending") query = query.eq("status", "pending");
+      if (tab !== "all") query = query.eq("status", tab as "pending");
       const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
+
+  const { data: counts } = useQuery({
+    queryKey: ["request-counts"],
+    enabled: Boolean(auth.user) && auth.isManager,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("vehicle_requests").select("status");
+      if (error) throw error;
+      return (data ?? []).reduce<Record<string, number>>((acc, row) => {
+        acc[row.status] = (acc[row.status] ?? 0) + 1;
+        return acc;
+      }, {});
+    },
+  });
+
 
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles-all"],
@@ -146,6 +173,7 @@ function GestaoPage() {
     }).catch(() => undefined);
     toast.success(status === "approved" ? "Solicitação autorizada." : "Solicitação recusada.");
     queryClient.invalidateQueries({ queryKey: ["all-requests"] });
+    queryClient.invalidateQueries({ queryKey: ["request-counts"] });
   }
 
 
@@ -171,15 +199,39 @@ function GestaoPage() {
       <AppHeader auth={auth} />
       <main className="mx-auto max-w-5xl px-4 py-12">
         <h1 className="text-2xl font-semibold">Autorização de solicitações</h1>
+        <h1 className="text-2xl font-semibold">Painel de aprovações</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Analise a demanda, designe o veículo e registre a decisão.
+          Analise a demanda, designe veículo e motorista e registre a decisão.
         </p>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          {(["pending", "approved", "rejected"] as const).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key)}
+              className={cn(
+                "surface-panel p-5 text-left transition-colors",
+                tab === key ? "ring-2 ring-primary" : "hover:bg-muted/40",
+              )}
+            >
+              <p className="text-sm text-muted-foreground">
+                {key === "pending" ? "Pendentes" : key === "approved" ? "Aprovadas" : "Recusadas"}
+              </p>
+              <p className="mt-1 text-3xl font-semibold">{counts?.[key] ?? 0}</p>
+            </button>
+          ))}
+        </div>
 
         <Tabs value={tab} onValueChange={setTab} className="mt-8">
           <TabsList>
-            <TabsTrigger value="pending">Pendentes</TabsTrigger>
-            <TabsTrigger value="all">Todas</TabsTrigger>
+            {MANAGER_TABS.map((t) => (
+              <TabsTrigger key={t.value} value={t.value}>
+                {t.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
+
 
           <TabsContent value={tab} className="mt-6 space-y-4">
             {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
@@ -344,6 +396,40 @@ function RequestCard({
             </div>
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+              Ações rápidas
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                const first = vehicles.find((v) => v.status === "available");
+                if (!first) {
+                  toast.error("Nenhum veículo disponível na frota.");
+                  return;
+                }
+                setVehicleId(first.id);
+                void onDecide(request, "approved", first.id, driverId || null, note);
+              }}
+            >
+              Autorizar com 1º veículo livre
+            </Button>
+            {["Frota indisponível no período", "Dados insuficientes na solicitação"].map((reason) => (
+              <Button
+                key={reason}
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNote(reason);
+                  void onDecide(request, "rejected", null, null, reason);
+                }}
+              >
+                Recusar: {reason}
+              </Button>
+            ))}
+          </div>
+
           <div className="flex flex-wrap gap-3">
             <Button
               onClick={() =>
@@ -358,8 +444,8 @@ function RequestCard({
             >
               Recusar
             </Button>
-
           </div>
+
         </div>
       )}
     </article>

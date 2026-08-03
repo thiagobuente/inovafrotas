@@ -12,7 +12,18 @@ import { sendNotification } from "@/lib/notifications.functions";
 import { useSeiaAuth, STATUS_LABELS, STATUS_TONE, formatDateTime } from "@/lib/seia";
 import { cn } from "@/lib/utils";
 
+const STATUS_FILTERS = [
+  { value: "all", label: "Todas" },
+  { value: "pending", label: "Pendentes" },
+  { value: "approved", label: "Autorizadas" },
+  { value: "rejected", label: "Recusadas" },
+  { value: "cancelled", label: "Canceladas" },
+] as const;
+
 export const Route = createFileRoute("/painel")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    status: typeof search.status === "string" ? search.status : "all",
+  }),
   head: () => ({
     meta: [
       { title: "Minhas solicitações — SEIA" },
@@ -36,6 +47,7 @@ export const Route = createFileRoute("/painel")({
 function PainelPage() {
   const auth = useSeiaAuth();
   const navigate = useNavigate();
+  const { status } = Route.useSearch();
   const queryClient = useQueryClient();
   const notify = useServerFn(sendNotification);
 
@@ -44,21 +56,23 @@ function PainelPage() {
   }, [auth.loading, auth.user, navigate]);
 
   const { data: requests, isLoading } = useQuery({
-    queryKey: ["my-requests", auth.user?.id],
+    queryKey: ["my-requests", auth.user?.id, status],
     enabled: Boolean(auth.user),
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("vehicle_requests")
         .select(
           "*, vehicles:assigned_vehicle_id (plate, brand, model), drivers:assigned_driver_id (full_name, phone)",
         )
         .eq("requester_id", auth.user!.id)
         .order("created_at", { ascending: false });
+      if (status !== "all") query = query.eq("status", status as "pending");
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
-
   });
+
 
   async function cancelRequest(request: Record<string, any>) {
     const { error } = await supabase
@@ -100,6 +114,24 @@ function PainelPage() {
           <Button asChild>
             <Link to="/solicitar">Nova solicitação</Link>
           </Button>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-2">
+          {STATUS_FILTERS.map((f) => (
+            <Link
+              key={f.value}
+              to="/painel"
+              search={{ status: f.value }}
+              className={cn(
+                "rounded-full border px-4 py-1.5 text-sm transition-colors",
+                status === f.value
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {f.label}
+            </Link>
+          ))}
         </div>
 
         <div className="mt-8 space-y-4">
