@@ -15,6 +15,7 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
     ...(auth.isManager
       ? [
           { to: "/gestao", label: "Autorizações" },
+          { to: "/agenda", label: "Agenda" },
           { to: "/frota", label: "Frota" },
           { to: "/notificacoes", label: "Notificações" },
           { to: "/auditoria", label: "Auditoria" },
