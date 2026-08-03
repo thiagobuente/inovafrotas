@@ -173,6 +173,7 @@ function GestaoPage() {
     }).catch(() => undefined);
     toast.success(status === "approved" ? "Solicitação autorizada." : "Solicitação recusada.");
     queryClient.invalidateQueries({ queryKey: ["all-requests"] });
+    queryClient.invalidateQueries({ queryKey: ["request-counts"] });
   }
 
 
