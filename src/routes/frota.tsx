@@ -371,30 +371,15 @@ function FrotaPage() {
 
             <div className="space-y-3">
               {vehicles?.map((v) => (
-                <div
+                <VehicleRow
                   key={v.id}
-                  className="surface-panel flex flex-wrap items-center justify-between gap-3 p-4"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {v.plate} — {v.brand} {v.model}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{v.capacity} lugares</p>
-                  </div>
-                  <Select value={v.status} onValueChange={(s) => updateVehicleStatus(v.id, s)}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(VEHICLE_STATUS).map(([val, label]) => (
-                        <SelectItem key={val} value={val}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  vehicle={v}
+                  onStatus={(s) => updateVehicleStatus(v.id, s)}
+                  onSave={(values) => saveVehicle(v.id, values)}
+                  onDelete={() => removeVehicle(v.id)}
+                />
               ))}
+
               {vehicles?.length === 0 && (
                 <p className="text-sm text-muted-foreground">Nenhum veículo cadastrado.</p>
               )}
