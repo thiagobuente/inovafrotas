@@ -116,6 +116,24 @@ function PainelPage() {
           </Button>
         </div>
 
+        <div className="mt-6 flex flex-wrap gap-2">
+          {STATUS_FILTERS.map((f) => (
+            <Link
+              key={f.value}
+              to="/painel"
+              search={{ status: f.value }}
+              className={cn(
+                "rounded-full border px-4 py-1.5 text-sm transition-colors",
+                status === f.value
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {f.label}
+            </Link>
+          ))}
+        </div>
+
         <div className="mt-8 space-y-4">
           {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
           {!isLoading && requests?.length === 0 && (
