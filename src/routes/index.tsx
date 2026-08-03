@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CarFront, ShieldCheck, ClipboardList, MailCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { CarFront, ShieldCheck, ClipboardList, MailCheck, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppHeader } from "@/components/AppHeader";
+import { supabase } from "@/integrations/supabase/client";
+import heroFleet from "@/assets/frota-hero.png";
 import { useSeiaAuth, EMAIL_DOMAIN } from "@/lib/seia";
 
 export const Route = createFileRoute("/")({
