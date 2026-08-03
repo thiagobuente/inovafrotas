@@ -12,7 +12,18 @@ import { sendNotification } from "@/lib/notifications.functions";
 import { useSeiaAuth, STATUS_LABELS, STATUS_TONE, formatDateTime } from "@/lib/seia";
 import { cn } from "@/lib/utils";
 
+const STATUS_FILTERS = [
+  { value: "all", label: "Todas" },
+  { value: "pending", label: "Pendentes" },
+  { value: "approved", label: "Autorizadas" },
+  { value: "rejected", label: "Recusadas" },
+  { value: "cancelled", label: "Canceladas" },
+] as const;
+
 export const Route = createFileRoute("/painel")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    status: typeof search.status === "string" ? search.status : "all",
+  }),
   head: () => ({
     meta: [
       { title: "Minhas solicitações — SEIA" },
