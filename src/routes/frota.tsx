@@ -1,3 +1,4 @@
+import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,21 @@ const VEHICLE_STATUS: Record<string, string> = {
   in_use: "Em uso",
   maintenance: "Manutenção",
   inactive: "Inativo",
+};
+
+type DriverForm = {
+  full_name: string;
+  license_number: string;
+  license_category: string;
+  phone: string;
+};
+
+type VehicleForm = {
+  plate: string;
+  brand: string;
+  model: string;
+  capacity: string;
+  vehicle_type: string;
 };
 
 export const Route = createFileRoute("/frota")({
@@ -152,6 +168,74 @@ function FrotaPage() {
     queryClient.invalidateQueries({ queryKey: ["vehicles-manage"] });
   }
 
+  async function saveDriver(id: string, values: DriverForm) {
+    if (!values.full_name.trim() || !values.license_number.trim()) {
+      toast.error("Informe nome e número da CNH.");
+      return false;
+    }
+    const { error } = await supabase
+      .from("drivers")
+      .update({
+        full_name: values.full_name.trim(),
+        license_number: values.license_number.trim(),
+        license_category: values.license_category,
+        phone: values.phone.trim() || null,
+      })
+      .eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    toast.success("Motorista atualizado.");
+    queryClient.invalidateQueries({ queryKey: ["drivers"] });
+    return true;
+  }
+
+  async function removeDriver(id: string) {
+    if (!window.confirm("Excluir este motorista definitivamente?")) return;
+    const { error } = await supabase.from("drivers").delete().eq("id", id);
+    if (error)
+      return toast.error(
+        "Não foi possível excluir: o motorista está vinculado a solicitações. Marque como indisponível.",
+      );
+    toast.success("Motorista excluído.");
+    queryClient.invalidateQueries({ queryKey: ["drivers"] });
+  }
+
+  async function saveVehicle(id: string, values: VehicleForm) {
+    if (!values.plate.trim() || !values.brand.trim() || !values.model.trim()) {
+      toast.error("Informe placa, marca e modelo.");
+      return false;
+    }
+    const { error } = await supabase
+      .from("vehicles")
+      .update({
+        plate: values.plate.trim().toUpperCase(),
+        brand: values.brand.trim(),
+        model: values.model.trim(),
+        capacity: Number(values.capacity) || 5,
+      })
+      .eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    toast.success("Veículo atualizado.");
+    queryClient.invalidateQueries({ queryKey: ["vehicles-manage"] });
+    return true;
+  }
+
+  async function removeVehicle(id: string) {
+    if (!window.confirm("Excluir este veículo definitivamente?")) return;
+    const { error } = await supabase.from("vehicles").delete().eq("id", id);
+    if (error)
+      return toast.error(
+        "Não foi possível excluir: o veículo está vinculado a solicitações. Marque como inativo.",
+      );
+    toast.success("Veículo excluído.");
+    queryClient.invalidateQueries({ queryKey: ["vehicles-manage"] });
+  }
+
   if (!auth.loading && auth.user && !auth.isManager) {
     return (
       <div className="min-h-screen">
@@ -232,31 +316,15 @@ function FrotaPage() {
 
             <div className="space-y-3">
               {drivers?.map((d) => (
-                <div
+                <DriverRow
                   key={d.id}
-                  className="surface-panel flex flex-wrap items-center justify-between gap-3 p-4"
-                >
-                  <div>
-                    <p className="font-medium">{d.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      CNH {d.license_number} · cat. {d.license_category}
-                      {d.phone ? ` · ${d.phone}` : ""}
-                    </p>
-                  </div>
-                  <Select value={d.status} onValueChange={(v) => updateDriverStatus(d.id, v)}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(DRIVER_STATUS).map(([v, label]) => (
-                        <SelectItem key={v} value={v}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  driver={d}
+                  onStatus={(v) => updateDriverStatus(d.id, v)}
+                  onSave={(values) => saveDriver(d.id, values)}
+                  onDelete={() => removeDriver(d.id)}
+                />
               ))}
+
               {drivers?.length === 0 && (
                 <p className="text-sm text-muted-foreground">Nenhum motorista cadastrado.</p>
               )}
@@ -304,30 +372,15 @@ function FrotaPage() {
 
             <div className="space-y-3">
               {vehicles?.map((v) => (
-                <div
+                <VehicleRow
                   key={v.id}
-                  className="surface-panel flex flex-wrap items-center justify-between gap-3 p-4"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {v.plate} — {v.brand} {v.model}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{v.capacity} lugares</p>
-                  </div>
-                  <Select value={v.status} onValueChange={(s) => updateVehicleStatus(v.id, s)}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(VEHICLE_STATUS).map(([val, label]) => (
-                        <SelectItem key={val} value={val}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  vehicle={v}
+                  onStatus={(s) => updateVehicleStatus(v.id, s)}
+                  onSave={(values) => saveVehicle(v.id, values)}
+                  onDelete={() => removeVehicle(v.id)}
+                />
               ))}
+
               {vehicles?.length === 0 && (
                 <p className="text-sm text-muted-foreground">Nenhum veículo cadastrado.</p>
               )}
@@ -335,6 +388,234 @@ function FrotaPage() {
           </TabsContent>
         </Tabs>
       </main>
+    </div>
+  );
+}
+
+type DriverRecord = {
+  id: string;
+  full_name: string;
+  license_number: string;
+  license_category: string;
+  phone: string | null;
+  status: string;
+};
+
+function DriverRow({
+  driver,
+  onStatus,
+  onSave,
+  onDelete,
+}: {
+  driver: DriverRecord;
+  onStatus: (v: string) => void;
+  onSave: (values: DriverForm) => Promise<boolean>;
+  onDelete: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState<DriverForm>({
+    full_name: driver.full_name,
+    license_number: driver.license_number,
+    license_category: driver.license_category,
+    phone: driver.phone ?? "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  if (editing) {
+    return (
+      <div className="surface-panel grid gap-4 p-4 sm:grid-cols-4">
+        <div className="space-y-2 sm:col-span-2">
+          <Label>Nome completo</Label>
+          <Input
+            value={form.full_name}
+            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>CNH</Label>
+          <Input
+            value={form.license_number}
+            onChange={(e) => setForm({ ...form, license_number: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Categoria</Label>
+          <Select
+            value={form.license_category}
+            onValueChange={(v) => setForm({ ...form, license_category: v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {["A", "B", "C", "D", "E"].map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label>Telefone</Label>
+          <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        </div>
+        <div className="flex items-end gap-2 sm:col-span-2">
+          <Button
+            disabled={saving}
+            onClick={async () => {
+              setSaving(true);
+              const ok = await onSave(form);
+              setSaving(false);
+              if (ok) setEditing(false);
+            }}
+          >
+            Salvar
+          </Button>
+          <Button variant="outline" onClick={() => setEditing(false)}>
+            Cancelar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="surface-panel flex flex-wrap items-center justify-between gap-3 p-4">
+      <div>
+        <p className="font-medium">{driver.full_name}</p>
+        <p className="text-xs text-muted-foreground">
+          CNH {driver.license_number} · cat. {driver.license_category}
+          {driver.phone ? ` · ${driver.phone}` : ""}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={driver.status} onValueChange={onStatus}>
+          <SelectTrigger className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(DRIVER_STATUS).map(([v, label]) => (
+              <SelectItem key={v} value={v}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+          <Pencil className="mr-1 size-4" /> Editar
+        </Button>
+        <Button variant="destructive" size="sm" onClick={onDelete}>
+          <Trash2 className="mr-1 size-4" /> Excluir
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+type VehicleRecord = {
+  id: string;
+  plate: string;
+  brand: string;
+  model: string;
+  capacity: number;
+  vehicle_type: string;
+  status: string;
+};
+
+function VehicleRow({
+  vehicle,
+  onStatus,
+  onSave,
+  onDelete,
+}: {
+  vehicle: VehicleRecord;
+  onStatus: (v: string) => void;
+  onSave: (values: VehicleForm) => Promise<boolean>;
+  onDelete: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState<VehicleForm>({
+    plate: vehicle.plate,
+    brand: vehicle.brand,
+    model: vehicle.model,
+    capacity: String(vehicle.capacity),
+    vehicle_type: vehicle.vehicle_type,
+  });
+  const [saving, setSaving] = useState(false);
+
+  if (editing) {
+    return (
+      <div className="surface-panel grid gap-4 p-4 sm:grid-cols-4">
+        <div className="space-y-2">
+          <Label>Placa</Label>
+          <Input value={form.plate} onChange={(e) => setForm({ ...form, plate: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <Label>Marca</Label>
+          <Input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <Label>Modelo</Label>
+          <Input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <Label>Lugares</Label>
+          <Input
+            type="number"
+            min={1}
+            value={form.capacity}
+            onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+          />
+        </div>
+        <div className="flex items-end gap-2 sm:col-span-2">
+          <Button
+            disabled={saving}
+            onClick={async () => {
+              setSaving(true);
+              const ok = await onSave(form);
+              setSaving(false);
+              if (ok) setEditing(false);
+            }}
+          >
+            Salvar
+          </Button>
+          <Button variant="outline" onClick={() => setEditing(false)}>
+            Cancelar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="surface-panel flex flex-wrap items-center justify-between gap-3 p-4">
+      <div>
+        <p className="font-medium">
+          {vehicle.plate} — {vehicle.brand} {vehicle.model}
+        </p>
+        <p className="text-xs text-muted-foreground">{vehicle.capacity} lugares</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={vehicle.status} onValueChange={onStatus}>
+          <SelectTrigger className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(VEHICLE_STATUS).map(([val, label]) => (
+              <SelectItem key={val} value={val}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+          <Pencil className="mr-1 size-4" /> Editar
+        </Button>
+        <Button variant="destructive" size="sm" onClick={onDelete}>
+          <Trash2 className="mr-1 size-4" /> Excluir
+        </Button>
+      </div>
     </div>
   );
 }
