@@ -30,6 +30,21 @@ const VEHICLE_STATUS: Record<string, string> = {
   inactive: "Inativo",
 };
 
+type DriverForm = {
+  full_name: string;
+  license_number: string;
+  license_category: string;
+  phone: string;
+};
+
+type VehicleForm = {
+  plate: string;
+  brand: string;
+  model: string;
+  capacity: string;
+  vehicle_type: string;
+};
+
 export const Route = createFileRoute("/frota")({
   head: () => ({
     meta: [
