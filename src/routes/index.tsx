@@ -79,8 +79,8 @@ function Index() {
                 Agendamento de Veículos SEIA
               </h1>
               <p className="mt-5 max-w-xl text-base opacity-90">
-                Fluxo simples e rastreável: o servidor registra a demanda com o e-mail
-                institucional e o gestor de frota autoriza, designando o veículo disponível.
+                O servidor registra a demanda com o e-mail institucional e o gestor de frota
+                autorizado designa o veículo disponível.
               </p>
 
               {auth.user && typeof pendingCount === "number" && (
