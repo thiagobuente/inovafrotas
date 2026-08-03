@@ -127,54 +127,70 @@ function GestaoPage() {
     driverId: string | null,
     note: string,
   ) {
-    if (status === "approved" && !vehicleId) {
-      toast.error("Selecione um veículo para autorizar.");
-      return;
+    try {
+      if (status === "approved" && !vehicleId) {
+        toast.error("Selecione um veículo para autorizar.");
+        return;
+      }
+      if (status === "rejected" && !note.trim()) {
+        toast.error("Informe o motivo da recusa.");
+        return;
+      }
+      const managerId = auth.user?.id;
+      if (!managerId) {
+        toast.error("Sessão expirada. Entre novamente para registrar a decisão.");
+        navigate({ to: "/entrar", replace: true });
+        return;
+      }
+      const { error } = await supabase
+        .from("vehicle_requests")
+        .update({
+          status,
+          assigned_vehicle_id: status === "approved" ? vehicleId : null,
+          assigned_driver_id: status === "approved" ? driverId : null,
+          decision_note: note.trim() || null,
+          decided_by: managerId,
+          decided_at: new Date().toISOString(),
+        })
+        .eq("id", request.id);
+      if (error) {
+        toast.error("Não foi possível registrar a decisão: " + error.message);
+        return;
+      }
+      const vehicle = (vehicles ?? []).find((v) => v.id === vehicleId);
+      const driver = (drivers ?? []).find((d) => d.id === driverId);
+      void Promise.resolve(
+        notify({
+          data: {
+            type: status === "approved" ? "request_approved" : "request_rejected",
+            protocol: request.protocol,
+            requesterEmail: request.requester_email,
+            destination: request.destination,
+            agenda: request.agenda,
+            pickupAt: request.pickup_at,
+            returnAt: request.return_at,
+            vehicleLabel:
+              status === "approved" && vehicle
+                ? `${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`
+                : null,
+            driverLabel: status === "approved" && driver ? driver.full_name : null,
+            note: note.trim() || null,
+            previousStatus: request.status,
+            status,
+          },
+        }),
+      ).catch(() => undefined);
+      toast.success(status === "approved" ? "Solicitação autorizada." : "Solicitação recusada.");
+      queryClient.invalidateQueries({ queryKey: ["all-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["request-counts"] });
+    } catch (err) {
+      toast.error(
+        "Não foi possível registrar a decisão: " +
+          (err instanceof Error ? err.message : "erro inesperado"),
+      );
     }
-    if (status === "rejected" && !note.trim()) {
-      toast.error("Informe o motivo da recusa.");
-      return;
-    }
-    const { error } = await supabase
-      .from("vehicle_requests")
-      .update({
-        status,
-        assigned_vehicle_id: status === "approved" ? vehicleId : null,
-        assigned_driver_id: status === "approved" ? driverId : null,
-        decision_note: note.trim() || null,
-        decided_by: auth.user!.id,
-        decided_at: new Date().toISOString(),
-      })
-      .eq("id", request.id);
-    if (error) {
-      toast.error("Não foi possível registrar a decisão: " + error.message);
-      return;
-    }
-    const vehicle = (vehicles ?? []).find((v) => v.id === vehicleId);
-    const driver = (drivers ?? []).find((d) => d.id === driverId);
-    void notify({
-      data: {
-        type: status === "approved" ? "request_approved" : "request_rejected",
-        protocol: request.protocol,
-        requesterEmail: request.requester_email,
-        destination: request.destination,
-        agenda: request.agenda,
-        pickupAt: request.pickup_at,
-        returnAt: request.return_at,
-        vehicleLabel:
-          status === "approved" && vehicle
-            ? `${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`
-            : null,
-        driverLabel: status === "approved" && driver ? driver.full_name : null,
-        note: note.trim() || null,
-        previousStatus: request.status,
-        status,
-      },
-    }).catch(() => undefined);
-    toast.success(status === "approved" ? "Solicitação autorizada." : "Solicitação recusada.");
-    queryClient.invalidateQueries({ queryKey: ["all-requests"] });
-    queryClient.invalidateQueries({ queryKey: ["request-counts"] });
   }
+
 
 
   if (!auth.loading && auth.user && !auth.isManager) {
