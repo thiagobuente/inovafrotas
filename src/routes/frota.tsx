@@ -315,31 +315,15 @@ function FrotaPage() {
 
             <div className="space-y-3">
               {drivers?.map((d) => (
-                <div
+                <DriverRow
                   key={d.id}
-                  className="surface-panel flex flex-wrap items-center justify-between gap-3 p-4"
-                >
-                  <div>
-                    <p className="font-medium">{d.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      CNH {d.license_number} · cat. {d.license_category}
-                      {d.phone ? ` · ${d.phone}` : ""}
-                    </p>
-                  </div>
-                  <Select value={d.status} onValueChange={(v) => updateDriverStatus(d.id, v)}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(DRIVER_STATUS).map(([v, label]) => (
-                        <SelectItem key={v} value={v}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  driver={d}
+                  onStatus={(v) => updateDriverStatus(d.id, v)}
+                  onSave={(values) => saveDriver(d.id, values)}
+                  onDelete={() => removeDriver(d.id)}
+                />
               ))}
+
               {drivers?.length === 0 && (
                 <p className="text-sm text-muted-foreground">Nenhum motorista cadastrado.</p>
               )}
