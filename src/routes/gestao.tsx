@@ -49,7 +49,32 @@ export const Route = createFileRoute("/gestao")({
     ],
   }),
   component: GestaoPage,
+  errorComponent: GestaoError,
 });
+
+function GestaoError({ error, reset }: { error: Error; reset: () => void }) {
+  const router = useRouter();
+  return (
+    <div className="min-h-screen">
+      <main className="mx-auto max-w-xl px-4 py-24 text-center">
+        <h1 className="text-2xl font-semibold">Não foi possível carregar o painel</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {error?.message || "Erro inesperado ao processar a autorização."}
+        </p>
+        <Button
+          className="mt-6"
+          onClick={() => {
+            router.invalidate();
+            reset();
+          }}
+        >
+          Tentar novamente
+        </Button>
+      </main>
+    </div>
+  );
+}
+
 
 function GestaoPage() {
   const auth = useSeiaAuth();
