@@ -1,44 +1,68 @@
 import type { DeliveryResult, NotificationMessage, NotificationProvider } from "./types";
 
+const BREVO_GATEWAY = "https://connector-gateway.lovable.dev/brevo";
+
 /**
- * Provedor de e-mail padrão da plataforma Lovable.
- * Não depende de domínio personalizado nem de registros DNS (TXT/NS/SPF/DKIM/DMARC).
- * Quando a entrega não é possível, a notificação fica PENDENTE no log —
- * nunca é descartada silenciosamente.
+ * Provedor Brevo via gateway de conectores da Lovable.
+ * Não exige alteração de DNS: basta que o endereço remetente esteja verificado
+ * na conta Brevo (confirmação por link enviado à própria caixa).
+ * Remetente configurável em SEIA_EMAIL_FROM (ex.: "frotas.01@inova.pr.gov.br").
  */
-class LovableEmailProvider implements NotificationProvider {
-  readonly name = "lovable-email";
+class BrevoEmailProvider implements NotificationProvider {
+  readonly name = "brevo";
 
   isReady() {
-    return Boolean(process.env.SEIA_EMAIL_FROM && process.env.LOVABLE_API_KEY);
+    return Boolean(process.env.LOVABLE_API_KEY && process.env.BREVO_API_KEY);
+  }
+
+  private sender() {
+    const raw = process.env.SEIA_EMAIL_FROM?.trim() || "frotas.01@inova.pr.gov.br";
+    const match = raw.match(/^(.*)<(.+)>$/);
+    return match
+      ? { name: match[1].trim() || "SEIA", email: match[2].trim() }
+      : { name: "SEIA — Frota Inova", email: raw };
   }
 
   async send(message: NotificationMessage): Promise<DeliveryResult> {
-    const from = process.env.SEIA_EMAIL_FROM;
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!from || !apiKey) {
+    const lovableKey = process.env.LOVABLE_API_KEY;
+    const brevoKey = process.env.BREVO_API_KEY;
+    if (!lovableKey || !brevoKey) {
       return {
         to: message.to,
         audience: message.audience,
         status: "pending",
         provider: this.name,
-        reason: "Domínio remetente ainda não configurado.",
+        reason: "Conexão Brevo ainda não vinculada ao projeto.",
       };
     }
     try {
-      const { sendLovableEmail } = await import("@lovable.dev/email-js");
-      await sendLovableEmail(
-        {
-          from,
-          to: message.to,
-          subject: message.subject,
-          html: message.html,
-          text: message.text,
+      const response = await fetch(`${BREVO_GATEWAY}/smtp/email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": brevoKey,
         },
-        { apiKey },
-      );
+        body: JSON.stringify({
+          sender: this.sender(),
+          to: [{ email: message.to }],
+          subject: message.subject,
+          htmlContent: message.html,
+          textContent: message.text,
+        }),
+      });
+      if (!response.ok) {
+        const body = await response.text();
+        console.error(`[notificacao:brevo] falha [${response.status}]: ${body}`);
+        return {
+          to: message.to,
+          audience: message.audience,
+          status: "failed",
+          provider: this.name,
+          reason: `Brevo respondeu ${response.status}: ${body.slice(0, 300)}`,
+        };
+      }
       return { to: message.to, audience: message.audience, status: "sent", provider: this.name };
-
     } catch (error) {
       return {
         to: message.to,
@@ -52,9 +76,9 @@ class LovableEmailProvider implements NotificationProvider {
 }
 
 /**
- * Ponto único de troca de provedor. Em outro ambiente (Hostinger, VPS, Manus,
- * SMTP Gmail) basta implementar NotificationProvider e retorná-lo aqui.
+ * Ponto único de troca de provedor. Em outro ambiente (VPS, SMTP próprio,
+ * Manus...) basta implementar NotificationProvider e retorná-lo aqui.
  */
 export function resolveProvider(): NotificationProvider {
-  return new LovableEmailProvider();
+  return new BrevoEmailProvider();
 }
