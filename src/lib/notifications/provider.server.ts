@@ -1,11 +1,10 @@
 import type { DeliveryResult, NotificationMessage, NotificationProvider } from "./types";
 
 /**
- * Provedor da plataforma Lovable.
- * Só entrega quando um domínio remetente estiver configurado (SPF/DKIM/DMARC
- * verificados) e a variável SEIA_EMAIL_FROM apontar para o remetente
- * institucional, ex.: "SEIA <nao-responda@notificacoes.inova.pr.gov.br>".
- * Sem domínio, a notificação fica PENDENTE — nunca é descartada silenciosamente.
+ * Provedor de e-mail padrão da plataforma Lovable.
+ * Não depende de domínio personalizado nem de registros DNS (TXT/NS/SPF/DKIM/DMARC).
+ * Quando a entrega não é possível, a notificação fica PENDENTE no log —
+ * nunca é descartada silenciosamente.
  */
 class LovableEmailProvider implements NotificationProvider {
   readonly name = "lovable-email";
