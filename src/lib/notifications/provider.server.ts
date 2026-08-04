@@ -16,12 +16,17 @@ class BrevoEmailProvider implements NotificationProvider {
   }
 
   private sender() {
-    const raw = process.env.SEIA_EMAIL_FROM?.trim() || "frotas.01@inova.pr.gov.br";
+    // Remetente precisa estar verificado na conta Brevo.
+    const raw = process.env.SEIA_EMAIL_FROM?.trim() || "";
     const match = raw.match(/^(.*)<(.+)>$/);
-    return match
-      ? { name: match[1].trim() || "SEIA", email: match[2].trim() }
-      : { name: "SEIA — Frota Inova", email: raw };
+    const email = (match ? match[2] : raw).trim().toLowerCase();
+    const verified = email.endsWith("@inova.pr.gov.br") && !email.includes("notify.");
+    return {
+      name: match?.[1]?.trim() || "SEIA — Frota Inova",
+      email: verified ? email : "frotas.01@inova.pr.gov.br",
+    };
   }
+
 
   async send(message: NotificationMessage): Promise<DeliveryResult> {
     const lovableKey = process.env.LOVABLE_API_KEY;
