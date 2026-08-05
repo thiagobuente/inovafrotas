@@ -342,7 +342,7 @@ function RequestCard({
   drivers: DriverRow[];
   onDecide: (
     request: Record<string, any>,
-    status: "approved" | "rejected",
+    status: "approved" | "rejected" | "cancelled",
     vehicleId: string | null,
     driverId: string | null,
     note: string,
