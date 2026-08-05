@@ -75,15 +75,25 @@ function PainelPage() {
 
 
   async function cancelRequest(request: Record<string, any>) {
+    const reason = cancelReason.trim();
+    if (reason.length < 5) {
+      toast.error("Informe o motivo do cancelamento (mínimo 5 caracteres).");
+      return;
+    }
+    setSaving(true);
+    const previousStatus = request.status as string;
     const { error } = await supabase
       .from("vehicle_requests")
-      .update({ status: "cancelled" })
+      .update({ status: "cancelled", decision_note: reason })
       .eq("id", request.id);
+    setSaving(false);
     if (error) {
       toast.error("Não foi possível cancelar: " + error.message);
       return;
     }
     toast.success("Solicitação cancelada.");
+    setCancelId(null);
+    setCancelReason("");
     void notify({
       data: {
         type: "request_cancelled",
@@ -93,12 +103,14 @@ function PainelPage() {
         agenda: request.agenda,
         pickupAt: request.pickup_at,
         returnAt: request.return_at,
-        previousStatus: "pending",
+        previousStatus,
         status: "cancelled",
+        note: reason,
       },
     }).catch(() => undefined);
     queryClient.invalidateQueries({ queryKey: ["my-requests"] });
   }
+
 
   return (
     <div className="min-h-screen">
