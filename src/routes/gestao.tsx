@@ -24,8 +24,10 @@ const MANAGER_TABS = [
   { value: "pending", label: "Pendentes" },
   { value: "approved", label: "Aprovadas" },
   { value: "rejected", label: "Recusadas" },
+  { value: "cancelled", label: "Canceladas" },
   { value: "all", label: "Todas" },
 ] as const;
+
 
 export const Route = createFileRoute("/gestao")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -147,7 +149,7 @@ function GestaoPage() {
 
   async function decide(
     request: Record<string, any>,
-    status: "approved" | "rejected",
+    status: "approved" | "rejected" | "cancelled",
     vehicleId: string | null,
     driverId: string | null,
     note: string,
@@ -159,6 +161,10 @@ function GestaoPage() {
       }
       if (status === "rejected" && !note.trim()) {
         toast.error("Informe o motivo da recusa.");
+        return;
+      }
+      if (status === "cancelled" && !note.trim()) {
+        toast.error("Informe o motivo do cancelamento.");
         return;
       }
       const managerId = auth.user?.id;
@@ -187,7 +193,12 @@ function GestaoPage() {
       void Promise.resolve(
         notify({
           data: {
-            type: status === "approved" ? "request_approved" : "request_rejected",
+            type:
+              status === "approved"
+                ? "request_approved"
+                : status === "rejected"
+                  ? "request_rejected"
+                  : "request_cancelled",
             protocol: request.protocol,
             requesterEmail: request.requester_email,
             destination: request.destination,
@@ -205,7 +216,14 @@ function GestaoPage() {
           },
         }),
       ).catch(() => undefined);
-      toast.success(status === "approved" ? "Solicitação autorizada." : "Solicitação recusada.");
+      toast.success(
+        status === "approved"
+          ? "Solicitação autorizada."
+          : status === "rejected"
+            ? "Solicitação recusada."
+            : "Reserva cancelada. O solicitante foi avisado.",
+      );
+
       queryClient.invalidateQueries({ queryKey: ["all-requests"] });
       queryClient.invalidateQueries({ queryKey: ["request-counts"] });
     } catch (err) {
@@ -324,7 +342,7 @@ function RequestCard({
   drivers: DriverRow[];
   onDecide: (
     request: Record<string, any>,
-    status: "approved" | "rejected",
+    status: "approved" | "rejected" | "cancelled",
     vehicleId: string | null,
     driverId: string | null,
     note: string,
@@ -380,11 +398,54 @@ function RequestCard({
           {request.vehicles.plate}
         </p>
       )}
-      {request.status === "rejected" && request.decision_note && (
-        <p className="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          Motivo: {request.decision_note}
-        </p>
+      {(request.status === "rejected" || request.status === "cancelled") &&
+        request.decision_note && (
+          <p className="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            Motivo: {request.decision_note}
+          </p>
+        )}
+
+      {request.status === "approved" && (
+        <div className="mt-6 space-y-3 border-t border-border pt-5">
+          <Label htmlFor={`cancel-${request.id}`}>Cancelar reserva autorizada</Label>
+          <Textarea
+            id={`cancel-${request.id}`}
+            rows={2}
+            maxLength={500}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Motivo do cancelamento (obrigatório)"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDecide(request, "cancelled", null, null, note)}
+            >
+              Cancelar reserva
+            </Button>
+            {["Solicitante desistiu da viagem", "Veículo indisponível"].map((reason) => (
+              <Button
+                key={reason}
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNote(reason);
+                  void onDecide(request, "cancelled", null, null, reason);
+                }}
+              >
+                {reason}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            O veículo e o motorista voltam a ficar livres na agenda e o solicitante recebe o
+            aviso por e-mail.
+          </p>
+        </div>
       )}
+
+
 
       {request.status === "pending" && (
         <div className="mt-6 space-y-4 border-t border-border pt-5">
