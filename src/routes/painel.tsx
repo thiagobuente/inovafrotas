@@ -52,6 +52,10 @@ function PainelPage() {
   const { status } = Route.useSearch();
   const queryClient = useQueryClient();
   const notify = useServerFn(sendNotification);
+  const [cancelId, setCancelId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
