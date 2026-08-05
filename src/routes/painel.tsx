@@ -208,14 +208,70 @@ function PainelPage() {
                   Motivo da recusa: {r.decision_note}
                 </p>
               )}
+              {r.status === "cancelled" && r.decision_note && (
+                <p className="mt-4 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  Motivo do cancelamento: {r.decision_note}
+                </p>
+              )}
 
-              {r.status === "pending" && (
-                <div className="mt-5">
-                  <Button variant="outline" size="sm" onClick={() => cancelRequest(r)}>
-                    Cancelar solicitação
-                  </Button>
+              {(r.status === "pending" || r.status === "approved") && (
+                <div className="mt-5 space-y-3">
+                  {cancelId === r.id ? (
+                    <div className="rounded-md border border-border p-4">
+                      <label className="text-sm font-medium" htmlFor={`motivo-${r.id}`}>
+                        Motivo do cancelamento
+                      </label>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {r.status === "approved"
+                          ? "A reserva já autorizada será liberada na agenda e o gestor será notificado."
+                          : "O gestor e você receberão a confirmação por e-mail."}
+                      </p>
+                      <Textarea
+                        id={`motivo-${r.id}`}
+                        className="mt-2"
+                        rows={3}
+                        maxLength={500}
+                        value={cancelReason}
+                        onChange={(e) => setCancelReason(e.target.value)}
+                        placeholder="Descreva o motivo do cancelamento"
+                      />
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={saving}
+                          onClick={() => cancelRequest(r)}
+                        >
+                          {saving ? "Cancelando…" : "Confirmar cancelamento"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={saving}
+                          onClick={() => {
+                            setCancelId(null);
+                            setCancelReason("");
+                          }}
+                        >
+                          Voltar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setCancelId(r.id);
+                        setCancelReason("");
+                      }}
+                    >
+                      {r.status === "approved" ? "Cancelar reserva" : "Cancelar solicitação"}
+                    </Button>
+                  )}
                 </div>
               )}
+
 
               {r.status === "approved" && <TripLogPanel requestId={r.id} />}
             </article>
