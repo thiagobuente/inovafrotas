@@ -1,13 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { AppHeader } from "@/components/AppHeader";
 import { TripLogPanel } from "@/components/TripLogPanel";
 import { sendNotification } from "@/lib/notifications.functions";
+
 
 import { useSeiaAuth, STATUS_LABELS, STATUS_TONE, formatDateTime } from "@/lib/seia";
 import { cn } from "@/lib/utils";
@@ -50,6 +52,10 @@ function PainelPage() {
   const { status } = Route.useSearch();
   const queryClient = useQueryClient();
   const notify = useServerFn(sendNotification);
+  const [cancelId, setCancelId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
@@ -75,15 +81,25 @@ function PainelPage() {
 
 
   async function cancelRequest(request: Record<string, any>) {
+    const reason = cancelReason.trim();
+    if (reason.length < 5) {
+      toast.error("Informe o motivo do cancelamento (mínimo 5 caracteres).");
+      return;
+    }
+    setSaving(true);
+    const previousStatus = request.status as string;
     const { error } = await supabase
       .from("vehicle_requests")
-      .update({ status: "cancelled" })
+      .update({ status: "cancelled", decision_note: reason })
       .eq("id", request.id);
+    setSaving(false);
     if (error) {
       toast.error("Não foi possível cancelar: " + error.message);
       return;
     }
     toast.success("Solicitação cancelada.");
+    setCancelId(null);
+    setCancelReason("");
     void notify({
       data: {
         type: "request_cancelled",
@@ -93,12 +109,14 @@ function PainelPage() {
         agenda: request.agenda,
         pickupAt: request.pickup_at,
         returnAt: request.return_at,
-        previousStatus: "pending",
+        previousStatus,
         status: "cancelled",
+        note: reason,
       },
     }).catch(() => undefined);
     queryClient.invalidateQueries({ queryKey: ["my-requests"] });
   }
+
 
   return (
     <div className="min-h-screen">
@@ -190,14 +208,70 @@ function PainelPage() {
                   Motivo da recusa: {r.decision_note}
                 </p>
               )}
+              {r.status === "cancelled" && r.decision_note && (
+                <p className="mt-4 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  Motivo do cancelamento: {r.decision_note}
+                </p>
+              )}
 
-              {r.status === "pending" && (
-                <div className="mt-5">
-                  <Button variant="outline" size="sm" onClick={() => cancelRequest(r)}>
-                    Cancelar solicitação
-                  </Button>
+              {(r.status === "pending" || r.status === "approved") && (
+                <div className="mt-5 space-y-3">
+                  {cancelId === r.id ? (
+                    <div className="rounded-md border border-border p-4">
+                      <label className="text-sm font-medium" htmlFor={`motivo-${r.id}`}>
+                        Motivo do cancelamento
+                      </label>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {r.status === "approved"
+                          ? "A reserva já autorizada será liberada na agenda e o gestor será notificado."
+                          : "O gestor e você receberão a confirmação por e-mail."}
+                      </p>
+                      <Textarea
+                        id={`motivo-${r.id}`}
+                        className="mt-2"
+                        rows={3}
+                        maxLength={500}
+                        value={cancelReason}
+                        onChange={(e) => setCancelReason(e.target.value)}
+                        placeholder="Descreva o motivo do cancelamento"
+                      />
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={saving}
+                          onClick={() => cancelRequest(r)}
+                        >
+                          {saving ? "Cancelando…" : "Confirmar cancelamento"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={saving}
+                          onClick={() => {
+                            setCancelId(null);
+                            setCancelReason("");
+                          }}
+                        >
+                          Voltar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setCancelId(r.id);
+                        setCancelReason("");
+                      }}
+                    >
+                      {r.status === "approved" ? "Cancelar reserva" : "Cancelar solicitação"}
+                    </Button>
+                  )}
                 </div>
               )}
+
 
               {r.status === "approved" && <TripLogPanel requestId={r.id} />}
             </article>
