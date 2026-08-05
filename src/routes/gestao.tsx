@@ -24,8 +24,10 @@ const MANAGER_TABS = [
   { value: "pending", label: "Pendentes" },
   { value: "approved", label: "Aprovadas" },
   { value: "rejected", label: "Recusadas" },
+  { value: "cancelled", label: "Canceladas" },
   { value: "all", label: "Todas" },
 ] as const;
+
 
 export const Route = createFileRoute("/gestao")({
   validateSearch: (search: Record<string, unknown>) => ({
