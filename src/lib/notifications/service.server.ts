@@ -43,6 +43,16 @@ export class NotificationService {
         provider: result.provider,
         reason: result.reason ?? null,
       });
+      // Aviso dentro do sistema: funciona mesmo quando o e-mail é barrado
+      // pela política DMARC do domínio institucional.
+      await supabaseAdmin.from("user_notifications").insert({
+        recipient_email: recipient,
+        audience,
+        event_type: event.type,
+        protocol: event.protocol,
+        title: subject,
+        body: buildInAppBody(event),
+      });
     } catch (error) {
       console.error("[notificacao:log] falha ao registrar entrega", error);
     }
