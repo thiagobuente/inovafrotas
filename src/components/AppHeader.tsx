@@ -2,6 +2,7 @@ import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { CarFront, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/NotificationBell";
 import { cn } from "@/lib/utils";
 import type { SeiaAuth } from "@/lib/seia";
 
@@ -60,6 +61,7 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
         <div className="ml-auto flex items-center gap-3">
           {auth.user ? (
             <>
+              <NotificationBell email={auth.user.email ?? ""} />
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-medium leading-tight">{auth.user.email}</p>
                 <p className="text-xs text-muted-foreground">
