@@ -92,3 +92,8 @@ export function buildMessages(event: NotificationEvent): NotificationMessage[] {
   }
   return recipients;
 }
+
+/** Resumo em texto simples usado no mural de avisos dentro do sistema. */
+export function buildInAppBody(event: NotificationEvent): string {
+  return [headline(event), ...lines(event).map(([k, v]) => `${k}: ${v}`)].join("\n");
+}
