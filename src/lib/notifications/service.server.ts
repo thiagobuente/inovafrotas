@@ -1,4 +1,4 @@
-import { buildMessages } from "./templates";
+import { buildInAppBody, buildMessages } from "./templates";
 import { resolveProvider } from "./provider.server";
 import type { DeliveryResult, NotificationEvent, NotificationProvider } from "./types";
 
