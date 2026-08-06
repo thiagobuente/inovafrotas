@@ -199,6 +199,42 @@ export type Database = {
           },
         ]
       }
+      user_notifications: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          event_type: string
+          id: string
+          protocol: string | null
+          read_at: string | null
+          recipient_email: string
+          title: string
+        }
+        Insert: {
+          audience?: string
+          body: string
+          created_at?: string
+          event_type: string
+          id?: string
+          protocol?: string | null
+          read_at?: string | null
+          recipient_email: string
+          title: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          protocol?: string | null
+          read_at?: string | null
+          recipient_email?: string
+          title?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
