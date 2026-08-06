@@ -23,7 +23,7 @@ const STATUS_FILTERS = [
 ] as const;
 
 export const Route = createFileRoute("/painel")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { status?: string } => ({
     status: typeof search.status === "string" ? search.status : "all",
   }),
   head: () => ({
