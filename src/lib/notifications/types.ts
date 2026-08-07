@@ -53,3 +53,19 @@ export interface NotificationProvider {
 }
 
 export const MANAGER_EMAIL = "frotas.01@inova.pr.gov.br";
+
+// ---- Configuração administrável de envio de e-mail ----
+
+export type EmailProviderId = "brevo" | "resend" | "smtp";
+
+export type EmailSettings = {
+  provider: EmailProviderId;
+  fromName: string;
+  fromEmail: string;
+  replyTo: string | null;
+  smtpHost: string | null;
+  smtpPort: number | null;
+  smtpUser: string | null;
+  smtpEncryption: "tls" | "ssl" | "none";
+  enabled: boolean;
+};
