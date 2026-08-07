@@ -83,6 +83,51 @@ export type Database = {
         }
         Relationships: []
       }
+      email_settings: {
+        Row: {
+          enabled: boolean
+          from_email: string
+          from_name: string
+          id: boolean
+          provider: string
+          reply_to: string | null
+          smtp_encryption: string
+          smtp_host: string | null
+          smtp_port: number | null
+          smtp_user: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          from_email?: string
+          from_name?: string
+          id?: boolean
+          provider?: string
+          reply_to?: string | null
+          smtp_encryption?: string
+          smtp_host?: string | null
+          smtp_port?: number | null
+          smtp_user?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          from_email?: string
+          from_name?: string
+          id?: boolean
+          provider?: string
+          reply_to?: string | null
+          smtp_encryption?: string
+          smtp_host?: string | null
+          smtp_port?: number | null
+          smtp_user?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       notification_logs: {
         Row: {
           audience: string
