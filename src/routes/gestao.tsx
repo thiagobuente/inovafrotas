@@ -190,8 +190,16 @@ function GestaoPage() {
       }
       const vehicle = (vehicles ?? []).find((v) => v.id === vehicleId);
       const driver = (drivers ?? []).find((d) => d.id === driverId);
-      void Promise.resolve(
-        notify({
+      toast.success(
+        status === "approved"
+          ? "Solicitação autorizada."
+          : status === "rejected"
+            ? "Solicitação recusada."
+            : "Reserva cancelada. O solicitante foi avisado.",
+      );
+
+      try {
+        const { results } = await notify({
           data: {
             type:
               status === "approved"
@@ -214,15 +222,22 @@ function GestaoPage() {
             previousStatus: request.status,
             status,
           },
-        }),
-      ).catch(() => undefined);
-      toast.success(
-        status === "approved"
-          ? "Solicitação autorizada."
-          : status === "rejected"
-            ? "Solicitação recusada."
-            : "Reserva cancelada. O solicitante foi avisado.",
-      );
+        });
+        const failed = (results ?? []).filter((r: any) => r.status !== "sent");
+        if (failed.length) {
+          toast.error(
+            `E-mail não entregue para ${failed.map((r: any) => r.to).join(", ")}. Motivo: ${failed[0].reason ?? "desconhecido"}`,
+            { duration: 12000 },
+          );
+        }
+      } catch (notifyError) {
+        toast.error(
+          "A decisão foi registrada, mas a notificação falhou: " +
+            (notifyError instanceof Error ? notifyError.message : "erro inesperado"),
+          { duration: 12000 },
+        );
+      }
+
 
       queryClient.invalidateQueries({ queryKey: ["all-requests"] });
       queryClient.invalidateQueries({ queryKey: ["request-counts"] });
