@@ -37,8 +37,9 @@ export class NotificationService {
         };
       }
       console.info(
-        `[notificacao:resultado] ${event.type} ${event.protocol} -> ${message.to} status=${result.status} provedor=${result.provider} ${Date.now() - startedAt}ms${result.reason ? ` motivo=${result.reason}` : ""}`,
+        `[notificacao:resultado] ${event.type} ${event.protocol} -> ${message.to} status=${result.status} provedor=${result.provider} de=${result.from ?? settings.fromEmail} responder=${result.replyTo ?? "-"} messageId=${result.messageId ?? "-"} ${Date.now() - startedAt}ms${result.reason ? ` motivo=${result.reason}` : ""}`,
       );
+
       results.push(result);
       await this.record(event, message, result);
     }
