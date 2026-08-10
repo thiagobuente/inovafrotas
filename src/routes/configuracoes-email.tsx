@@ -108,7 +108,8 @@ function ConfiguracoesEmailPage() {
   }
 
   async function handleTest() {
-    setTesting(true);
+    setLastError(null);
+    setLastResult(null);
     setLastError(null);
     try {
       const result = await test({ data: { to: testTo } });
