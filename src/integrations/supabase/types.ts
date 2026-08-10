@@ -133,11 +133,14 @@ export type Database = {
           audience: string
           created_at: string
           event_type: string
+          from_email: string | null
           id: string
+          message_id: string | null
           protocol: string
           provider: string
           reason: string | null
           recipient: string
+          reply_to: string | null
           requester_email: string | null
           status: string
           subject: string
@@ -146,11 +149,14 @@ export type Database = {
           audience: string
           created_at?: string
           event_type: string
+          from_email?: string | null
           id?: string
+          message_id?: string | null
           protocol: string
           provider: string
           reason?: string | null
           recipient: string
+          reply_to?: string | null
           requester_email?: string | null
           status: string
           subject: string
@@ -159,11 +165,14 @@ export type Database = {
           audience?: string
           created_at?: string
           event_type?: string
+          from_email?: string | null
           id?: string
+          message_id?: string | null
           protocol?: string
           provider?: string
           reason?: string | null
           recipient?: string
+          reply_to?: string | null
           requester_email?: string | null
           status?: string
           subject?: string
