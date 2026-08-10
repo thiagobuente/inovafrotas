@@ -84,7 +84,11 @@ export class NotificationService {
       status: result.status,
       provider: result.provider,
       reason: result.reason ?? null,
+      from_email: result.from ?? `${config.fromName} <${config.fromEmail}>`,
+      reply_to: result.replyTo ?? config.replyTo ?? null,
+      message_id: result.messageId ?? null,
     });
+
     return result;
   }
 
