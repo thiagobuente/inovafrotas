@@ -68,6 +68,8 @@ function ConfiguracoesEmailPage() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [lastResult, setLastResult] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
