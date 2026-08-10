@@ -13,14 +13,24 @@ function fail(
   provider: string,
   reason: string,
   status: DeliveryResult["status"] = "failed",
+  extra: Partial<DeliveryResult> = {},
 ): DeliveryResult {
   console.error(`[notificacao:${provider}:${status}] ${message.to} — ${reason}`);
-  return { to: message.to, audience: message.audience, status, provider, reason };
+  return {
+    to: message.to,
+    audience: message.audience,
+    status,
+    provider,
+    reason,
+    sentAt: new Date().toISOString(),
+    ...extra,
+  };
 }
 
 function fromHeader(settings: EmailSettings) {
   return `${settings.fromName} <${settings.fromEmail}>`;
 }
+
 
 /**
  * Brevo (API HTTP) através do gateway de conectores da Lovable.
