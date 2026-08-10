@@ -399,6 +399,13 @@ function ConfiguracoesEmailPage() {
                   </p>
                 </div>
               )}
+              {lastResult && (
+                <div className="mt-4 flex gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <p className="whitespace-pre-wrap break-words font-mono text-xs">{lastResult}</p>
+                </div>
+              )}
+
             </section>
           </div>
         )}
