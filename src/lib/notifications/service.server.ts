@@ -108,7 +108,11 @@ export class NotificationService {
       status: result.status,
       provider: result.provider,
       reason: result.reason ?? null,
+      from_email: result.from ?? null,
+      reply_to: result.replyTo ?? null,
+      message_id: result.messageId ?? null,
     });
+
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       // Aviso dentro do sistema: chega mesmo quando o e-mail é barrado pelo
