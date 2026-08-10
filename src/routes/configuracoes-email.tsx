@@ -111,12 +111,25 @@ function ConfiguracoesEmailPage() {
     try {
       const result = await test({ data: { to: testTo } });
       if (result.status === "sent") {
+        setLastResult(
+          [
+            `Destinatário: ${result.to}`,
+            `De: ${result.from ?? "-"}`,
+            `Responder para: ${result.replyTo ?? "-"}`,
+            `Provedor: ${result.provider}`,
+            `Horário: ${new Date(result.sentAt ?? Date.now()).toLocaleString("pt-BR")}`,
+            `Situação: aceito pelo provedor`,
+            `ID da mensagem: ${result.messageId ?? "-"}`,
+          ].join("\n"),
+        );
         toast.success(`E-mail de teste aceito pelo provedor ${result.provider}.`);
       } else {
         const message = result.reason ?? "O provedor não aceitou a mensagem.";
+        setLastResult(null);
         setLastError(`[${result.status}] ${message}`);
         toast.error("Falha no envio de teste. Veja o detalhe abaixo do formulário.");
       }
+
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro inesperado no teste.";
       setLastError(message);
