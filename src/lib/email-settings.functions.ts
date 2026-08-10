@@ -24,9 +24,11 @@ export const getEmailSettings = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await requireManager(context as never);
     const { loadEmailSettings } = await import("@/lib/notifications/settings.server");
-    const settings = await loadEmailSettings();
+    const { loadBrevoSenderCatalog } = await import("@/lib/notifications/brevo.server");
+    const [settings, brevo] = await Promise.all([loadEmailSettings(), loadBrevoSenderCatalog()]);
     return {
       settings,
+      brevo,
       environment: {
         brevoConnected: Boolean(process.env.BREVO_API_KEY && process.env.LOVABLE_API_KEY),
         resendConfigured: Boolean(process.env.RESEND_API_KEY),
@@ -55,6 +57,18 @@ export const saveEmailSettings = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     await requireManager(context as never);
+
+    // O campo "De" precisa pertencer a um domínio autenticado na Brevo. Quando o
+    // DKIM de inova.pr.gov.br for publicado, o próprio catálogo passa a aceitá-lo.
+    if (data.provider === "brevo" && data.enabled) {
+      const { loadBrevoSenderCatalog, validateBrevoFrom } = await import(
+        "@/lib/notifications/brevo.server"
+      );
+      const catalog = await loadBrevoSenderCatalog();
+      const problem = validateBrevoFrom(data.fromEmail, catalog);
+      if (problem) throw new Error(problem);
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("email_settings").upsert(
       {
@@ -78,6 +92,7 @@ export const saveEmailSettings = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
 
 export const sendTestEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
