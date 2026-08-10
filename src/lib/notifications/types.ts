@@ -43,7 +43,16 @@ export type DeliveryResult = {
   status: DeliveryStatus;
   provider: string;
   reason?: string;
+  /** Remetente efetivamente usado no envio. */
+  from?: string;
+  /** Endereço de resposta enviado ao provedor. */
+  replyTo?: string | null;
+  /** Identificador da mensagem devolvido pelo provedor (Brevo/Resend). */
+  messageId?: string | null;
+  /** Momento do envio (ISO). */
+  sentAt?: string;
 };
+
 
 export interface NotificationProvider {
   readonly name: string;

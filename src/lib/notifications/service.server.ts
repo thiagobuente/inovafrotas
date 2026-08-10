@@ -37,8 +37,9 @@ export class NotificationService {
         };
       }
       console.info(
-        `[notificacao:resultado] ${event.type} ${event.protocol} -> ${message.to} status=${result.status} provedor=${result.provider} ${Date.now() - startedAt}ms${result.reason ? ` motivo=${result.reason}` : ""}`,
+        `[notificacao:resultado] ${event.type} ${event.protocol} -> ${message.to} status=${result.status} provedor=${result.provider} de=${result.from ?? settings.fromEmail} responder=${result.replyTo ?? "-"} messageId=${result.messageId ?? "-"} ${Date.now() - startedAt}ms${result.reason ? ` motivo=${result.reason}` : ""}`,
       );
+
       results.push(result);
       await this.record(event, message, result);
     }
@@ -83,7 +84,11 @@ export class NotificationService {
       status: result.status,
       provider: result.provider,
       reason: result.reason ?? null,
+      from_email: result.from ?? `${config.fromName} <${config.fromEmail}>`,
+      reply_to: result.replyTo ?? config.replyTo ?? null,
+      message_id: result.messageId ?? null,
     });
+
     return result;
   }
 
@@ -103,7 +108,11 @@ export class NotificationService {
       status: result.status,
       provider: result.provider,
       reason: result.reason ?? null,
+      from_email: result.from ?? null,
+      reply_to: result.replyTo ?? null,
+      message_id: result.messageId ?? null,
     });
+
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       // Aviso dentro do sistema: chega mesmo quando o e-mail é barrado pelo

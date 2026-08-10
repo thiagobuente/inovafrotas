@@ -68,6 +68,8 @@ function ConfiguracoesEmailPage() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [lastResult, setLastResult] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
@@ -108,15 +110,30 @@ function ConfiguracoesEmailPage() {
   async function handleTest() {
     setTesting(true);
     setLastError(null);
+    setLastResult(null);
+
     try {
       const result = await test({ data: { to: testTo } });
       if (result.status === "sent") {
+        setLastResult(
+          [
+            `Destinatário: ${result.to}`,
+            `De: ${result.from ?? "-"}`,
+            `Responder para: ${result.replyTo ?? "-"}`,
+            `Provedor: ${result.provider}`,
+            `Horário: ${new Date(result.sentAt ?? Date.now()).toLocaleString("pt-BR")}`,
+            `Situação: aceito pelo provedor`,
+            `ID da mensagem: ${result.messageId ?? "-"}`,
+          ].join("\n"),
+        );
         toast.success(`E-mail de teste aceito pelo provedor ${result.provider}.`);
       } else {
         const message = result.reason ?? "O provedor não aceitou a mensagem.";
+        setLastResult(null);
         setLastError(`[${result.status}] ${message}`);
         toast.error("Falha no envio de teste. Veja o detalhe abaixo do formulário.");
       }
+
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro inesperado no teste.";
       setLastError(message);
@@ -213,7 +230,45 @@ function ConfiguracoesEmailPage() {
             </section>
 
             <section className="rounded-xl border border-border bg-card p-6">
-              <h2 className="mb-4 font-medium">Remetente</h2>
+              <h2 className="mb-1 font-medium">Remetente</h2>
+              <p className="mb-4 text-sm text-muted-foreground">
+                O campo <strong>De</strong> só aceita endereços de um domínio já autenticado
+                (DKIM) na Brevo. O <strong>Responder para</strong> pode ser qualquer endereço —
+                use o institucional para que as respostas cheguem à frota.
+              </p>
+
+              {form.provider === "brevo" && (
+                <div className="mb-4 rounded-lg border border-border bg-secondary/40 p-4 text-xs">
+                  <p className="mb-2 font-medium">Situação dos domínios na Brevo</p>
+                  {!data?.brevo?.available ? (
+                    <p className="text-muted-foreground">
+                      Não foi possível consultar a Brevo agora
+                      {data?.brevo?.reason ? `: ${data.brevo.reason}` : "."}
+                    </p>
+                  ) : data.brevo.domains.length === 0 ? (
+                    <p className="text-muted-foreground">Nenhum domínio cadastrado.</p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {data.brevo.domains.map((d) => (
+                        <li key={d.domain} className="flex items-center gap-2">
+                          {d.authenticated ? (
+                            <CheckCircle2 className="size-3 text-primary" />
+                          ) : (
+                            <AlertTriangle className="size-3 text-destructive" />
+                          )}
+                          <span className="font-mono">{d.domain}</span>
+                          <span className="text-muted-foreground">
+                            {d.authenticated
+                              ? "autenticado — pode ser usado como remetente"
+                              : "não autenticado — bloqueado como remetente até publicar o DKIM"}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="fromName">Nome exibido</Label>
@@ -224,25 +279,39 @@ function ConfiguracoesEmailPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="fromEmail">E-mail do remetente</Label>
+                  <Label htmlFor="fromEmail">E-mail do remetente (De)</Label>
                   <Input
                     id="fromEmail"
                     type="email"
+                    list="brevo-senders"
                     value={form.fromEmail}
                     onChange={(e) => update("fromEmail", e.target.value)}
                   />
+                  <datalist id="brevo-senders">
+                    {(data?.brevo?.senders ?? []).map((s) => (
+                      <option key={s.email} value={s.email} />
+                    ))}
+                  </datalist>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Precisa pertencer a um domínio autenticado na Brevo.
+                  </p>
                 </div>
                 <div className="sm:col-span-2">
-                  <Label htmlFor="replyTo">Responder para (opcional)</Label>
+                  <Label htmlFor="replyTo">Responder para (Reply-To)</Label>
                   <Input
                     id="replyTo"
                     type="email"
+                    placeholder="frotas.01@inova.pr.gov.br"
                     value={form.replyTo ?? ""}
                     onChange={(e) => update("replyTo", e.target.value || null)}
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Livre — pode ser o endereço institucional mesmo sem DNS autenticado.
+                  </p>
                 </div>
               </div>
             </section>
+
 
             <section className="rounded-xl border border-border bg-card p-6">
               <h2 className="font-medium">Servidor SMTP</h2>
@@ -332,6 +401,13 @@ function ConfiguracoesEmailPage() {
                   </p>
                 </div>
               )}
+              {lastResult && (
+                <div className="mt-4 flex gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <p className="whitespace-pre-wrap break-words font-mono text-xs">{lastResult}</p>
+                </div>
+              )}
+
             </section>
           </div>
         )}

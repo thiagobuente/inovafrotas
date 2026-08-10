@@ -13,14 +13,24 @@ function fail(
   provider: string,
   reason: string,
   status: DeliveryResult["status"] = "failed",
+  extra: Partial<DeliveryResult> = {},
 ): DeliveryResult {
   console.error(`[notificacao:${provider}:${status}] ${message.to} — ${reason}`);
-  return { to: message.to, audience: message.audience, status, provider, reason };
+  return {
+    to: message.to,
+    audience: message.audience,
+    status,
+    provider,
+    reason,
+    sentAt: new Date().toISOString(),
+    ...extra,
+  };
 }
 
 function fromHeader(settings: EmailSettings) {
   return `${settings.fromName} <${settings.fromEmail}>`;
 }
+
 
 /**
  * Brevo (API HTTP) através do gateway de conectores da Lovable.
@@ -66,15 +76,38 @@ class BrevoEmailProvider implements NotificationProvider {
         }),
       });
       const body = await response.text();
+      const meta = {
+        from: `${this.settings.fromName} <${this.settings.fromEmail}>`,
+        replyTo: this.settings.replyTo ?? null,
+        sentAt: new Date().toISOString(),
+      };
       if (!response.ok) {
         return fail(
           message,
           this.name,
           `Brevo respondeu HTTP ${response.status}: ${body.slice(0, 500)}`,
+          "failed",
+          meta,
         );
       }
-      console.info(`[notificacao:brevo:sent] ${message.to} — ${body.slice(0, 200)}`);
-      return { to: message.to, audience: message.audience, status: "sent", provider: this.name };
+      let messageId: string | null = null;
+      try {
+        messageId = (JSON.parse(body || "{}") as { messageId?: string }).messageId ?? null;
+      } catch {
+        messageId = null;
+      }
+      console.info(
+        `[notificacao:brevo:sent] destinatario=${message.to} de=${meta.from} responder=${meta.replyTo ?? "-"} messageId=${messageId ?? "-"} em=${meta.sentAt}`,
+      );
+      return {
+        to: message.to,
+        audience: message.audience,
+        status: "sent",
+        provider: this.name,
+        messageId,
+        ...meta,
+      };
+
     } catch (error) {
       return fail(
         message,
@@ -118,15 +151,38 @@ class ResendEmailProvider implements NotificationProvider {
         }),
       });
       const body = await response.text();
+      const meta = {
+        from: fromHeader(this.settings),
+        replyTo: this.settings.replyTo ?? null,
+        sentAt: new Date().toISOString(),
+      };
       if (!response.ok) {
         return fail(
           message,
           this.name,
           `Resend respondeu HTTP ${response.status}: ${body.slice(0, 500)}`,
+          "failed",
+          meta,
         );
       }
-      console.info(`[notificacao:resend:sent] ${message.to} — ${body.slice(0, 200)}`);
-      return { to: message.to, audience: message.audience, status: "sent", provider: this.name };
+      let messageId: string | null = null;
+      try {
+        messageId = (JSON.parse(body || "{}") as { id?: string }).id ?? null;
+      } catch {
+        messageId = null;
+      }
+      console.info(
+        `[notificacao:resend:sent] destinatario=${message.to} de=${meta.from} responder=${meta.replyTo ?? "-"} messageId=${messageId ?? "-"} em=${meta.sentAt}`,
+      );
+      return {
+        to: message.to,
+        audience: message.audience,
+        status: "sent",
+        provider: this.name,
+        messageId,
+        ...meta,
+      };
+
     } catch (error) {
       return fail(
         message,
