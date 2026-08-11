@@ -42,7 +42,12 @@ const PROVIDERS = [
   {
     id: "brevo" as const,
     label: "Brevo (API HTTPS)",
-    hint: "Em uso hoje. Não exige DNS próprio, apenas remetente verificado na conta Brevo.",
+    hint: "Não exige DNS próprio, apenas remetente verificado na conta Brevo.",
+  },
+  {
+    id: "google_mail" as const,
+    label: "Gmail (API Google)",
+    hint: "Envia pela conta Gmail/Google conectada. Não depende do DNS de inova.pr.gov.br.",
   },
   {
     id: "resend" as const,
