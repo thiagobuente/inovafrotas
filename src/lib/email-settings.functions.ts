@@ -101,6 +101,21 @@ export const saveEmailSettings = createServerFn({ method: "POST" })
       if (problem) throw new Error(problem);
     }
 
+    // Gmail usa o e-mail da conta conectada como remetente efetivo.
+    if (data.provider === "google_mail" && data.enabled) {
+      const accountEmail = await loadGmailAccountEmail();
+      if (!accountEmail) {
+        throw new Error(
+          "A conexão Gmail não está disponível. Conecte uma conta Google em Configurações → Conectores antes de ativar este provedor.",
+        );
+      }
+      if (data.fromEmail.trim().toLowerCase() !== accountEmail) {
+        throw new Error(
+          `Com o Gmail, o remetente deve ser exatamente o e-mail da conta conectada (${accountEmail}). O campo "Responder para" pode continuar sendo frotas.01@inova.pr.gov.br.`,
+        );
+      }
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("email_settings").upsert(
       {
