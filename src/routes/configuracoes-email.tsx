@@ -226,6 +226,12 @@ function ConfiguracoesEmailPage() {
                   Brevo {data?.environment.brevoConnected ? "conectada" : "não conectada"}
                 </span>
                 <span
+                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1 ${data?.environment.gmailConnected ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+                >
+                  <CheckCircle2 className="size-3" />
+                  Gmail {data?.environment.gmailConnected ? "conectado" : "não conectado"}
+                </span>
+                <span
                   className={`inline-flex items-center gap-1 rounded-full px-3 py-1 ${data?.environment.resendConfigured ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
                 >
                   <CheckCircle2 className="size-3" />
