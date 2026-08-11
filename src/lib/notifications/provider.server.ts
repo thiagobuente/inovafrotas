@@ -256,9 +256,14 @@ class GmailEmailProvider implements NotificationProvider {
           Accept: "application/json",
         },
       });
+      console.info(`[notificacao:gmail:profile] status=${profileRes.status}`);
       if (profileRes.ok) {
         const profile = (await profileRes.json()) as { emailAddress?: string };
         accountEmail = profile.emailAddress ?? null;
+        console.info(`[notificacao:gmail:profile] email=${accountEmail}`);
+      } else {
+        const body = await profileRes.text();
+        console.warn(`[notificacao:gmail:profile] falha ${profileRes.status}: ${body.slice(0, 300)}`);
       }
     } catch (error) {
       console.warn(
