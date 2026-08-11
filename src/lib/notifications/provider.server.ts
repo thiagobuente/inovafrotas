@@ -219,6 +219,160 @@ class SmtpEmailProvider implements NotificationProvider {
   }
 }
 
+/**
+ * Gmail (API HTTPS) através do gateway de conectores da Lovable.
+ * Não exige DNS próprio: o Google entrega a mensagem pelos servidores dele.
+ * O remetente efetivo é sempre o e-mail da conta Gmail conectada.
+ */
+class GmailEmailProvider implements NotificationProvider {
+  readonly name = "google_mail";
+  constructor(private readonly settings: EmailSettings) {}
+
+  isReady() {
+    return Boolean(process.env.LOVABLE_API_KEY && process.env.GOOGLE_MAIL_API_KEY);
+  }
+
+  async send(message: NotificationMessage): Promise<DeliveryResult> {
+    const lovableKey = process.env.LOVABLE_API_KEY;
+    const gmailKey = process.env.GOOGLE_MAIL_API_KEY;
+    if (!lovableKey) {
+      return fail(message, this.name, "LOVABLE_API_KEY ausente no servidor.", "pending");
+    }
+    if (!gmailKey) {
+      return fail(
+        message,
+        this.name,
+        "Conexão Gmail não vinculada ao projeto (GOOGLE_MAIL_API_KEY ausente).",
+        "pending",
+      );
+    }
+
+    let accountEmail: string | null = null;
+    try {
+      const profileRes = await fetch(`${GOOGLE_MAIL_GATEWAY}/gmail/v1/users/me/profile`, {
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": gmailKey,
+          Accept: "application/json",
+        },
+      });
+      if (profileRes.ok) {
+        const profile = (await profileRes.json()) as { emailAddress?: string };
+        accountEmail = profile.emailAddress ?? null;
+      }
+    } catch (error) {
+      console.warn(
+        `[notificacao:gmail] nao foi possivel consultar perfil: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
+    if (!accountEmail) {
+      return fail(
+        message,
+        this.name,
+        "Não foi possível identificar o e-mail da conta Gmail conectada.",
+        "pending",
+      );
+    }
+
+    const fromHeader = `${this.settings.fromName} <${accountEmail}>`;
+    const raw = createRawEmail({
+      from: fromHeader,
+      to: message.to,
+      replyTo: this.settings.replyTo ?? undefined,
+      subject: message.subject,
+      text: message.text,
+      html: message.html,
+    });
+
+    try {
+      const response = await fetch(`${GOOGLE_MAIL_GATEWAY}/gmail/v1/users/me/messages/send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": gmailKey,
+        },
+        body: JSON.stringify({ raw }),
+      });
+      const body = await response.text();
+      const meta = {
+        from: fromHeader,
+        replyTo: this.settings.replyTo ?? null,
+        sentAt: new Date().toISOString(),
+      };
+      if (!response.ok) {
+        return fail(
+          message,
+          this.name,
+          `Gmail respondeu HTTP ${response.status}: ${body.slice(0, 500)}`,
+          "failed",
+          meta,
+        );
+      }
+      let messageId: string | null = null;
+      try {
+        messageId = (JSON.parse(body || "{}") as { id?: string }).id ?? null;
+      } catch {
+        messageId = null;
+      }
+      console.info(
+        `[notificacao:gmail:sent] destinatario=${message.to} de=${meta.from} responder=${meta.replyTo ?? "-"} messageId=${messageId ?? "-"} em=${meta.sentAt}`,
+      );
+      return {
+        to: message.to,
+        audience: message.audience,
+        status: "sent",
+        provider: this.name,
+        messageId,
+        ...meta,
+      };
+    } catch (error) {
+      return fail(
+        message,
+        this.name,
+        `Falha de rede ao chamar o Gmail: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+}
+
+function createRawEmail(options: {
+  from: string;
+  to: string;
+  replyTo?: string;
+  subject: string;
+  text: string;
+  html: string;
+}) {
+  const boundary = `----=_Part_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+  const lines = [
+    `From: ${options.from}`,
+    `To: ${options.to}`,
+    `Subject: ${options.subject}`,
+  ];
+  if (options.replyTo) lines.push(`Reply-To: ${options.replyTo}`);
+  lines.push(
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    "MIME-Version: 1.0",
+    "",
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    "",
+    options.text,
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "",
+    options.html,
+    `--${boundary}--`,
+  );
+  const rfc2822 = lines.join("\r\n");
+  return btoa(rfc2822)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
 /** Provedor desativado pelo gestor na tela de configurações. */
 class DisabledProvider implements NotificationProvider {
   readonly name = "desativado";
