@@ -5,6 +5,8 @@ import type {
   NotificationProvider,
 } from "./types";
 
+const GOOGLE_MAIL_GATEWAY = "https://connector-gateway.lovable.dev/google_mail";
+
 const BREVO_GATEWAY = "https://connector-gateway.lovable.dev/brevo";
 const RESEND_API = "https://api.resend.com/emails";
 
