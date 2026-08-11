@@ -19,19 +19,51 @@ async function requireManager(context: { supabase: any; userId: string }) {
   if (!data) throw new Error("Apenas o gestor de frota pode acessar as configurações de e-mail.");
 }
 
+async function loadGmailAccountEmail(): Promise<string | null> {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const gmailKey = process.env.GOOGLE_MAIL_API_KEY;
+  if (!lovableKey || !gmailKey) return null;
+  try {
+    const response = await fetch(
+      "https://connector-gateway.lovable.dev/google_mail/gmail/v1/users/me/profile",
+      {
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": gmailKey,
+          Accept: "application/json",
+        },
+      },
+    );
+    if (!response.ok) return null;
+    const profile = (await response.json()) as { emailAddress?: string };
+    return profile.emailAddress?.trim().toLowerCase() ?? null;
+  } catch (error) {
+    console.warn(
+      `[config-email] falha ao consultar perfil do Gmail: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return null;
+  }
+}
+
 export const getEmailSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await requireManager(context as never);
     const { loadEmailSettings } = await import("@/lib/notifications/settings.server");
     const { loadBrevoSenderCatalog } = await import("@/lib/notifications/brevo.server");
-    const [settings, brevo] = await Promise.all([loadEmailSettings(), loadBrevoSenderCatalog()]);
+    const [settings, brevo, gmailAccount] = await Promise.all([
+      loadEmailSettings(),
+      loadBrevoSenderCatalog(),
+      loadGmailAccountEmail(),
+    ]);
     return {
       settings,
       brevo,
+      gmailAccount,
       environment: {
         brevoConnected: Boolean(process.env.BREVO_API_KEY && process.env.LOVABLE_API_KEY),
         resendConfigured: Boolean(process.env.RESEND_API_KEY),
+        gmailConnected: Boolean(process.env.GOOGLE_MAIL_API_KEY && process.env.LOVABLE_API_KEY),
       },
     };
   });
