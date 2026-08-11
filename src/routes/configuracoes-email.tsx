@@ -42,7 +42,12 @@ const PROVIDERS = [
   {
     id: "brevo" as const,
     label: "Brevo (API HTTPS)",
-    hint: "Em uso hoje. Não exige DNS próprio, apenas remetente verificado na conta Brevo.",
+    hint: "Não exige DNS próprio, apenas remetente verificado na conta Brevo.",
+  },
+  {
+    id: "google_mail" as const,
+    label: "Gmail (API Google)",
+    hint: "Envia pela conta Gmail/Google conectada. Não depende do DNS de inova.pr.gov.br.",
   },
   {
     id: "resend" as const,
@@ -85,6 +90,13 @@ function ConfiguracoesEmailPage() {
     if (data?.settings && !form) setForm(data.settings);
     if (data?.settings && !testTo) setTestTo(auth.user?.email ?? "");
   }, [data, form, testTo, auth.user]);
+
+  // Quando o provedor Gmail é escolhido, o remetente deve ser o e-mail da conta conectada.
+  useEffect(() => {
+    if (form?.provider === "google_mail" && data?.gmailAccount && form.fromEmail !== data.gmailAccount) {
+      setForm((prev) => (prev ? { ...prev, fromEmail: data.gmailAccount! } : prev));
+    }
+  }, [form?.provider, data?.gmailAccount, form?.fromEmail]);
 
   function update<K extends keyof EmailSettings>(key: K, value: EmailSettings[K]) {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
@@ -221,6 +233,12 @@ function ConfiguracoesEmailPage() {
                   Brevo {data?.environment.brevoConnected ? "conectada" : "não conectada"}
                 </span>
                 <span
+                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1 ${data?.environment.gmailConnected ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+                >
+                  <CheckCircle2 className="size-3" />
+                  Gmail {data?.environment.gmailConnected ? "conectado" : "não conectado"}
+                </span>
+                <span
                   className={`inline-flex items-center gap-1 rounded-full px-3 py-1 ${data?.environment.resendConfigured ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
                 >
                   <CheckCircle2 className="size-3" />
@@ -232,9 +250,19 @@ function ConfiguracoesEmailPage() {
             <section className="rounded-xl border border-border bg-card p-6">
               <h2 className="mb-1 font-medium">Remetente</h2>
               <p className="mb-4 text-sm text-muted-foreground">
-                O campo <strong>De</strong> só aceita endereços de um domínio já autenticado
-                (DKIM) na Brevo. O <strong>Responder para</strong> pode ser qualquer endereço —
-                use o institucional para que as respostas cheguem à frota.
+                {form.provider === "google_mail" ? (
+                  <>
+                    Com o Gmail, o <strong>De</strong> é fixo: usa o e-mail da conta Google
+                    conectada. O <strong>Responder para</strong> pode ser qualquer endereço — use
+                    o institucional para que as respostas cheguem à frota.
+                  </>
+                ) : (
+                  <>
+                    O campo <strong>De</strong> só aceita endereços de um domínio já autenticado
+                    (DKIM) na Brevo. O <strong>Responder para</strong> pode ser qualquer endereço —
+                    use o institucional para que as respostas cheguem à frota.
+                  </>
+                )}
               </p>
 
               {form.provider === "brevo" && (
@@ -269,6 +297,29 @@ function ConfiguracoesEmailPage() {
                 </div>
               )}
 
+              {form.provider === "google_mail" && (
+                <div className="mb-4 rounded-lg border border-border bg-secondary/40 p-4 text-xs">
+                  <p className="mb-2 font-medium">Conta Gmail conectada</p>
+                  {data?.gmailAccount ? (
+                    <p className="flex items-center gap-2">
+                      <CheckCircle2 className="size-3 text-primary" />
+                      <span className="font-mono">{data.gmailAccount}</span>
+                      <span className="text-muted-foreground">será usado como remetente</span>
+                    </p>
+                  ) : data?.environment.gmailConnected ? (
+                    <p className="text-muted-foreground">
+                      Conta conectada, mas não foi possível ler o e-mail agora. Recarregue a
+                      página.
+                    </p>
+                  ) : (
+                    <p className="text-destructive">
+                      Nenhuma conta Gmail vinculada. Vá em Configurações → Conectores e conecte
+                      uma conta Google.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="fromName">Nome exibido</Label>
@@ -283,9 +334,11 @@ function ConfiguracoesEmailPage() {
                   <Input
                     id="fromEmail"
                     type="email"
-                    list="brevo-senders"
+                    list={form.provider === "brevo" ? "brevo-senders" : undefined}
                     value={form.fromEmail}
                     onChange={(e) => update("fromEmail", e.target.value)}
+                    readOnly={form.provider === "google_mail"}
+                    className={form.provider === "google_mail" ? "bg-muted" : ""}
                   />
                   <datalist id="brevo-senders">
                     {(data?.brevo?.senders ?? []).map((s) => (
@@ -293,7 +346,9 @@ function ConfiguracoesEmailPage() {
                     ))}
                   </datalist>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Precisa pertencer a um domínio autenticado na Brevo.
+                    {form.provider === "google_mail"
+                      ? "Fixo: usa o e-mail da conta Google conectada."
+                      : "Precisa pertencer a um domínio autenticado na Brevo."}
                   </p>
                 </div>
                 <div className="sm:col-span-2">
