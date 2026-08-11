@@ -367,10 +367,9 @@ function createRawEmail(options: {
     `--${boundary}--`,
   );
   const rfc2822 = lines.join("\r\n");
-  return btoa(rfc2822)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  // btoa não suporta caracteres fora do range Latin-1; Buffer codifica UTF-8 corretamente.
+  // base64url já remove '+' e '/' e o padding '='.
+  return Buffer.from(rfc2822, "utf8").toString("base64url");
 }
 
 /** Provedor desativado pelo gestor na tela de configurações. */
