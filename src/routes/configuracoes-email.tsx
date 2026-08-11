@@ -243,9 +243,19 @@ function ConfiguracoesEmailPage() {
             <section className="rounded-xl border border-border bg-card p-6">
               <h2 className="mb-1 font-medium">Remetente</h2>
               <p className="mb-4 text-sm text-muted-foreground">
-                O campo <strong>De</strong> só aceita endereços de um domínio já autenticado
-                (DKIM) na Brevo. O <strong>Responder para</strong> pode ser qualquer endereço —
-                use o institucional para que as respostas cheguem à frota.
+                {form.provider === "google_mail" ? (
+                  <>
+                    Com o Gmail, o <strong>De</strong> é fixo: usa o e-mail da conta Google
+                    conectada. O <strong>Responder para</strong> pode ser qualquer endereço — use
+                    o institucional para que as respostas cheguem à frota.
+                  </>
+                ) : (
+                  <>
+                    O campo <strong>De</strong> só aceita endereços de um domínio já autenticado
+                    (DKIM) na Brevo. O <strong>Responder para</strong> pode ser qualquer endereço —
+                    use o institucional para que as respostas cheguem à frota.
+                  </>
+                )}
               </p>
 
               {form.provider === "brevo" && (
@@ -276,6 +286,29 @@ function ConfiguracoesEmailPage() {
                         </li>
                       ))}
                     </ul>
+                  )}
+                </div>
+              )}
+
+              {form.provider === "google_mail" && (
+                <div className="mb-4 rounded-lg border border-border bg-secondary/40 p-4 text-xs">
+                  <p className="mb-2 font-medium">Conta Gmail conectada</p>
+                  {data?.gmailAccount ? (
+                    <p className="flex items-center gap-2">
+                      <CheckCircle2 className="size-3 text-primary" />
+                      <span className="font-mono">{data.gmailAccount}</span>
+                      <span className="text-muted-foreground">será usado como remetente</span>
+                    </p>
+                  ) : data?.environment.gmailConnected ? (
+                    <p className="text-muted-foreground">
+                      Conta conectada, mas não foi possível ler o e-mail agora. Recarregue a
+                      página.
+                    </p>
+                  ) : (
+                    <p className="text-destructive">
+                      Nenhuma conta Gmail vinculada. Vá em Configurações → Conectores e conecte
+                      uma conta Google.
+                    </p>
                   )}
                 </div>
               )}
