@@ -91,6 +91,13 @@ function ConfiguracoesEmailPage() {
     if (data?.settings && !testTo) setTestTo(auth.user?.email ?? "");
   }, [data, form, testTo, auth.user]);
 
+  // Quando o provedor Gmail é escolhido, o remetente deve ser o e-mail da conta conectada.
+  useEffect(() => {
+    if (form?.provider === "google_mail" && data?.gmailAccount && form.fromEmail !== data.gmailAccount) {
+      setForm((prev) => (prev ? { ...prev, fromEmail: data.gmailAccount! } : prev));
+    }
+  }, [form?.provider, data?.gmailAccount, form?.fromEmail]);
+
   function update<K extends keyof EmailSettings>(key: K, value: EmailSettings[K]) {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
   }
