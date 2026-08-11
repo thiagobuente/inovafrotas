@@ -397,6 +397,8 @@ export function resolveProvider(settings: EmailSettings): NotificationProvider {
       return new ResendEmailProvider(settings);
     case "smtp":
       return new SmtpEmailProvider(settings);
+    case "google_mail":
+      return new GmailEmailProvider(settings);
     default:
       return new BrevoEmailProvider(settings);
   }
