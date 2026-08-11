@@ -65,7 +65,7 @@ export const MANAGER_EMAIL = "frotas.01@inova.pr.gov.br";
 
 // ---- Configuração administrável de envio de e-mail ----
 
-export type EmailProviderId = "brevo" | "resend" | "smtp";
+export type EmailProviderId = "brevo" | "resend" | "smtp" | "google_mail";
 
 export type EmailSettings = {
   provider: EmailProviderId;
