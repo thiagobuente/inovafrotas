@@ -76,7 +76,7 @@ export const saveEmailSettings = createServerFn({ method: "POST" })
     }
     assertEmail(input.fromEmail.trim().toLowerCase(), "Remetente");
     if (input.replyTo) assertEmail(input.replyTo.trim().toLowerCase(), "Responder para");
-    if (!["brevo", "resend", "smtp"].includes(input.provider)) {
+    if (!["brevo", "resend", "smtp", "google_mail"].includes(input.provider)) {
       throw new Error("Provedor inválido.");
     }
     if (input.provider === "smtp" && !input.smtpHost?.trim()) {
