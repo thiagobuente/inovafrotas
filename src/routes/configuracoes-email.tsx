@@ -327,9 +327,11 @@ function ConfiguracoesEmailPage() {
                   <Input
                     id="fromEmail"
                     type="email"
-                    list="brevo-senders"
+                    list={form.provider === "brevo" ? "brevo-senders" : undefined}
                     value={form.fromEmail}
                     onChange={(e) => update("fromEmail", e.target.value)}
+                    readOnly={form.provider === "google_mail"}
+                    className={form.provider === "google_mail" ? "bg-muted" : ""}
                   />
                   <datalist id="brevo-senders">
                     {(data?.brevo?.senders ?? []).map((s) => (
@@ -337,7 +339,9 @@ function ConfiguracoesEmailPage() {
                     ))}
                   </datalist>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Precisa pertencer a um domínio autenticado na Brevo.
+                    {form.provider === "google_mail"
+                      ? "Fixo: usa o e-mail da conta Google conectada."
+                      : "Precisa pertencer a um domínio autenticado na Brevo."}
                   </p>
                 </div>
                 <div className="sm:col-span-2">
