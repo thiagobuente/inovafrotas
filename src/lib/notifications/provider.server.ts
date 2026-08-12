@@ -342,6 +342,26 @@ class GmailEmailProvider implements NotificationProvider {
   }
 }
 
+/** Cabeçalhos só aceitam ASCII: acentos precisam do encoded-word (RFC 2047). */
+function encodeHeaderText(value: string) {
+  if (/^[\x20-\x7E]*$/.test(value)) return value;
+  return `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`;
+}
+
+/** Codifica "Nome Acentuado <email@dominio>" preservando o endereço. */
+function encodeAddressHeader(value: string) {
+  const match = value.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  if (!match) return encodeHeaderText(value);
+  const name = match[1]?.replace(/^"|"$/g, "") ?? "";
+  const address = match[2];
+  if (!name) return `<${address}>`;
+  return `${encodeHeaderText(name)} <${address}>`;
+}
+
+function toBase64Body(value: string) {
+  return (Buffer.from(value, "utf8").toString("base64").match(/.{1,76}/g) ?? []).join("\r\n");
+}
+
 function createRawEmail(options: {
   from: string;
   to: string;
@@ -352,30 +372,32 @@ function createRawEmail(options: {
 }) {
   const boundary = `----=_Part_${Math.random().toString(36).slice(2)}_${Date.now()}`;
   const lines = [
-    `From: ${options.from}`,
-    `To: ${options.to}`,
-    `Subject: ${options.subject}`,
+    `From: ${encodeAddressHeader(options.from)}`,
+    `To: ${encodeAddressHeader(options.to)}`,
+    `Subject: ${encodeHeaderText(options.subject)}`,
   ];
-  if (options.replyTo) lines.push(`Reply-To: ${options.replyTo}`);
+  if (options.replyTo) lines.push(`Reply-To: ${encodeAddressHeader(options.replyTo)}`);
   lines.push(
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
     "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
     "",
     `--${boundary}`,
     'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
     "",
-    options.text,
+    toBase64Body(options.text),
     `--${boundary}`,
     'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
     "",
-    options.html,
+    toBase64Body(options.html),
     `--${boundary}--`,
   );
   const rfc2822 = lines.join("\r\n");
-  // btoa não suporta caracteres fora do range Latin-1; Buffer codifica UTF-8 corretamente.
   // base64url já remove '+' e '/' e o padding '='.
   return Buffer.from(rfc2822, "utf8").toString("base64url");
 }
+
 
 /** Provedor desativado pelo gestor na tela de configurações. */
 class DisabledProvider implements NotificationProvider {
