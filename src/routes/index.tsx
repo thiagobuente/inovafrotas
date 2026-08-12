@@ -126,14 +126,44 @@ function Index() {
             </div>
 
             <div className="hidden lg:block">
-              <img
-                src={heroFleet}
-                alt="Ilustração da frota institucional de veículos do SEIA"
-                width={1024}
-                height={768}
-                className="w-full drop-shadow-2xl"
-              />
+              {vehicles && vehicles.length > 0 ? (
+                <div className="rounded-2xl border border-primary-foreground/25 bg-primary-foreground/10 p-5 backdrop-blur">
+                  <p className="text-sm font-medium uppercase tracking-[0.15em] opacity-80">
+                    Frota cadastrada
+                  </p>
+                  <ul className="mt-4 space-y-3">
+                    {vehicles.map((v) => (
+                      <li
+                        key={v.id}
+                        className="flex items-center gap-3 rounded-xl border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-3"
+                      >
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/20">
+                          <CarFront className="size-5" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">
+                            {v.brand} {v.model}
+                          </p>
+                          <p className="text-xs opacity-80">
+                            Placa {v.plate} · {v.capacity} lugares ·{" "}
+                            {VEHICLE_STATUS_LABELS[v.status] ?? v.status}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <img
+                  src={heroFleet}
+                  alt="Ilustração da frota institucional de veículos do SEIA"
+                  width={1024}
+                  height={768}
+                  className="w-full drop-shadow-2xl"
+                />
+              )}
             </div>
+
           </div>
         </section>
 
