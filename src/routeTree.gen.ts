@@ -18,6 +18,7 @@ import { Route as FrotaRouteImport } from './routes/frota'
 import { Route as GestaoRouteImport } from './routes/gestao'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as PainelRouteImport } from './routes/painel'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as SolicitarRouteImport } from './routes/solicitar'
 
 const IndexRoute = IndexRouteImport.update({
@@ -65,6 +66,11 @@ const PainelRoute = PainelRouteImport.update({
   path: '/painel',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SolicitarRoute = SolicitarRouteImport.update({
   id: '/solicitar',
   path: '/solicitar',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/gestao': typeof GestaoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/solicitar': typeof SolicitarRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/gestao': typeof GestaoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/solicitar': typeof SolicitarRoute
 }
 export interface FileRoutesById {
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/gestao': typeof GestaoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/solicitar': typeof SolicitarRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/gestao'
     | '/notificacoes'
     | '/painel'
+    | '/redefinir-senha'
     | '/solicitar'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/gestao'
     | '/notificacoes'
     | '/painel'
+    | '/redefinir-senha'
     | '/solicitar'
   id:
     | '__root__'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/gestao'
     | '/notificacoes'
     | '/painel'
+    | '/redefinir-senha'
     | '/solicitar'
   fileRoutesById: FileRoutesById
 }
@@ -157,6 +169,7 @@ export interface RootRouteChildren {
   GestaoRoute: typeof GestaoRoute
   NotificacoesRoute: typeof NotificacoesRoute
   PainelRoute: typeof PainelRoute
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   SolicitarRoute: typeof SolicitarRoute
 }
 
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PainelRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/solicitar': {
       id: '/solicitar'
       path: '/solicitar'
@@ -245,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   GestaoRoute: GestaoRoute,
   NotificacoesRoute: NotificacoesRoute,
   PainelRoute: PainelRoute,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
   SolicitarRoute: SolicitarRoute,
 }
 export const routeTree = rootRouteImport
