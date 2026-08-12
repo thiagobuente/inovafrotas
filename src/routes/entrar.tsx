@@ -38,10 +38,31 @@ function EntrarPage() {
   const [fullName, setFullName] = useState("");
   const [department, setDepartment] = useState("");
   const [busy, setBusy] = useState(false);
+  const [forgot, setForgot] = useState(false);
 
   useEffect(() => {
     if (auth.user) navigate({ to: "/painel", replace: true });
   }, [auth.user, navigate]);
+
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    if (!isInstitutionalEmail(email)) {
+      toast.error(`Use um e-mail terminado em ${EMAIL_DOMAIN}`);
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/redefinir-senha`,
+    });
+    setBusy(false);
+    if (error) {
+      toast.error("Não foi possível enviar o e-mail: " + error.message);
+      return;
+    }
+    toast.success("Enviamos um link de redefinição para o seu e-mail institucional.");
+    setForgot(false);
+  }
+
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -112,33 +133,70 @@ function EntrarPage() {
             </TabsList>
 
             <TabsContent value="login">
-              <form className="mt-5 space-y-4" onSubmit={handleSignIn}>
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail institucional</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    required
-                    placeholder={`nome${EMAIL_DOMAIN}`}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  Entrar
-                </Button>
-              </form>
+              {forgot ? (
+                <form className="mt-5 space-y-4" onSubmit={handleForgot}>
+                  <p className="text-sm text-muted-foreground">
+                    Informe seu e-mail institucional e enviaremos um link para criar uma nova senha.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email">E-mail institucional</Label>
+                    <Input
+                      id="forgot-email"
+                      type="email"
+                      required
+                      placeholder={`nome${EMAIL_DOMAIN}`}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={busy}>
+                    Enviar link de redefinição
+                  </Button>
+                  <button
+                    type="button"
+                    className="w-full text-sm text-muted-foreground hover:underline"
+                    onClick={() => setForgot(false)}
+                  >
+                    Voltar para o login
+                  </button>
+                </form>
+              ) : (
+                <form className="mt-5 space-y-4" onSubmit={handleSignIn}>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">E-mail institucional</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      required
+                      placeholder={`nome${EMAIL_DOMAIN}`}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Senha</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={busy}>
+                    Entrar
+                  </Button>
+                  <button
+                    type="button"
+                    className="w-full text-sm text-muted-foreground hover:underline"
+                    onClick={() => setForgot(true)}
+                  >
+                    Esqueci minha senha
+                  </button>
+                </form>
+              )}
             </TabsContent>
+
 
             <TabsContent value="signup">
               <form className="mt-5 space-y-4" onSubmit={handleSignUp}>
