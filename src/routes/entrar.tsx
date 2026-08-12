@@ -38,10 +38,31 @@ function EntrarPage() {
   const [fullName, setFullName] = useState("");
   const [department, setDepartment] = useState("");
   const [busy, setBusy] = useState(false);
+  const [forgot, setForgot] = useState(false);
 
   useEffect(() => {
     if (auth.user) navigate({ to: "/painel", replace: true });
   }, [auth.user, navigate]);
+
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    if (!isInstitutionalEmail(email)) {
+      toast.error(`Use um e-mail terminado em ${EMAIL_DOMAIN}`);
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/redefinir-senha`,
+    });
+    setBusy(false);
+    if (error) {
+      toast.error("Não foi possível enviar o e-mail: " + error.message);
+      return;
+    }
+    toast.success("Enviamos um link de redefinição para o seu e-mail institucional.");
+    setForgot(false);
+  }
+
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
