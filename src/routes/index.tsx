@@ -47,8 +47,29 @@ const steps = [
   },
 ];
 
+const VEHICLE_STATUS_LABELS: Record<string, string> = {
+  available: "Disponível",
+  in_use: "Em uso",
+  maintenance: "Em manutenção",
+  inactive: "Inativo",
+};
+
 function Index() {
   const auth = useSeiaAuth();
+
+  const { data: vehicles } = useQuery({
+    queryKey: ["hero-vehicles", auth.user?.id],
+    enabled: Boolean(auth.user),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, plate, brand, model, capacity, status")
+        .order("plate")
+        .limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   const { data: pendingCount } = useQuery({
     queryKey: ["pending-count", auth.user?.id],
@@ -63,6 +84,7 @@ function Index() {
       return count ?? 0;
     },
   });
+
 
   return (
     <div className="min-h-screen">
