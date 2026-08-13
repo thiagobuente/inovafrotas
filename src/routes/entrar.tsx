@@ -9,7 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppHeader } from "@/components/AppHeader";
 import { useSeiaAuth, isInstitutionalEmail, EMAIL_DOMAIN } from "@/lib/seia";
 
+function safeNext(next: unknown): string | null {
+  if (typeof next !== "string" || !next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
+
 export const Route = createFileRoute("/entrar")({
+  validateSearch: (s: Record<string, unknown>) => ({ next: safeNext(s.next) ?? undefined }),
   head: () => ({
     meta: [
       { title: "Entrar — SEIA Frota Institucional" },
@@ -33,6 +39,7 @@ export const Route = createFileRoute("/entrar")({
 function EntrarPage() {
   const auth = useSeiaAuth();
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -41,8 +48,13 @@ function EntrarPage() {
   const [forgot, setForgot] = useState(false);
 
   useEffect(() => {
-    if (auth.user) navigate({ to: "/painel", replace: true });
-  }, [auth.user, navigate]);
+    if (!auth.user) return;
+    if (next) {
+      window.location.href = next;
+      return;
+    }
+    navigate({ to: "/painel", replace: true });
+  }, [auth.user, navigate, next]);
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -80,6 +92,10 @@ function EntrarPage() {
       toast.error("Não foi possível entrar: " + error.message);
       return;
     }
+    if (next) {
+      window.location.href = next;
+      return;
+    }
     navigate({ to: "/painel" });
   }
 
@@ -94,7 +110,7 @@ function EntrarPage() {
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: next ? `${window.location.origin}${next}` : window.location.origin,
         data: { full_name: fullName, department },
       },
     });
@@ -110,6 +126,10 @@ function EntrarPage() {
         full_name: fullName,
         department,
       });
+      if (next) {
+        window.location.href = next;
+        return;
+      }
       navigate({ to: "/painel" });
       return;
     }
