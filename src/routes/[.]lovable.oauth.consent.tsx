@@ -3,6 +3,12 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
+type OAuthDetails = {
+  redirect_url?: string;
+  redirect_to?: string;
+  client?: { name?: string } | null;
+};
+
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
   head: () => ({
@@ -34,9 +40,10 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     const authorizationId = new URLSearchParams(location.search).get("authorization_id")!;
     const { data, error } = await supabase.auth.oauth.getAuthorizationDetails(authorizationId);
     if (error) throw error;
-    const immediate = data?.redirect_url ?? data?.redirect_to;
-    if (immediate && !data?.client) throw redirect({ href: immediate });
-    return data;
+    const details = data as OAuthDetails | null;
+    const immediate = details?.redirect_url ?? details?.redirect_to;
+    if (immediate && !details?.client) throw redirect({ href: immediate });
+    return details;
   },
   component: Consent,
   errorComponent: ({ error }) => (
@@ -61,12 +68,13 @@ function Consent() {
     const { data, error } = approve
       ? await supabase.auth.oauth.approveAuthorization(authorization_id)
       : await supabase.auth.oauth.denyAuthorization(authorization_id);
+    const result = data as OAuthDetails | null;
     if (error) {
       setBusy(false);
       setError(error.message);
       return;
     }
-    const target = data?.redirect_url ?? data?.redirect_to;
+    const target = result?.redirect_url ?? result?.redirect_to;
     if (!target) {
       setBusy(false);
       setError("O servidor de autorização não retornou um redirecionamento.");
