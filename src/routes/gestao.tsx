@@ -273,7 +273,6 @@ function GestaoPage() {
       <AppHeader auth={auth} />
       <main className="mx-auto max-w-5xl px-4 py-12">
         <h1 className="text-2xl font-semibold">Autorização de solicitações</h1>
-        <h1 className="text-2xl font-semibold">Painel de aprovações</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Analise a demanda, designe veículo e motorista e registre a decisão.
         </p>
