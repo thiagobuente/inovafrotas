@@ -11,8 +11,12 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const links = [
-    { to: "/painel", label: "Minhas solicitações" },
-    { to: "/solicitar", label: "Nova solicitação" },
+    ...(auth.isManager
+      ? []
+      : [
+          { to: "/painel", label: "Minhas solicitações" },
+          { to: "/solicitar", label: "Nova solicitação" },
+        ]),
     ...(auth.isManager
       ? [
           { to: "/gestao", label: "Autorizações" },
@@ -20,7 +24,6 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
           { to: "/frota", label: "Frota" },
           { to: "/notificacoes", label: "Notificações" },
           { to: "/configuracoes-email", label: "E-mail" },
-
           { to: "/auditoria", label: "Auditoria" },
         ]
       : []),
