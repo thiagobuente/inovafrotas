@@ -42,8 +42,10 @@ function SolicitarPage() {
   const notify = useServerFn(sendNotification);
 
   useEffect(() => {
-    if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
-  }, [auth.loading, auth.user, navigate]);
+    if (auth.loading) return;
+    if (!auth.user) navigate({ to: "/entrar", replace: true });
+    else if (auth.isManager) navigate({ to: "/gestao", search: { status: "pending" }, replace: true });
+  }, [auth.loading, auth.user, auth.isManager, navigate]);
 
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles-available"],

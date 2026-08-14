@@ -73,7 +73,7 @@ function Index() {
 
   const { data: pendingCount } = useQuery({
     queryKey: ["pending-count", auth.user?.id],
-    enabled: Boolean(auth.user),
+    enabled: Boolean(auth.user) && !auth.isManager,
     queryFn: async () => {
       const { count, error } = await supabase
         .from("vehicle_requests")
@@ -115,24 +115,35 @@ function Index() {
               )}
 
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button asChild size="lg" variant="secondary">
-                  <Link to={auth.user ? "/solicitar" : "/entrar"}>
-                    <CarFront className="size-5" />
-                    {auth.user ? "Nova solicitação" : "Entrar com e-mail institucional"}
-                  </Link>
-                </Button>
-                {auth.user && (
-                  <Button
-                    asChild
-                    size="lg"
-                    variant="outline"
-                    className="border-2 border-primary-foreground/70 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/25 hover:text-primary-foreground"
-                  >
-                    <Link to="/painel">
-                      <ClipboardList className="size-5" />
-                      Acompanhar solicitações
+                {auth.isManager ? (
+                  <Button asChild size="lg" variant="secondary">
+                    <Link to="/gestao" search={{ status: "pending" }}>
+                      <ShieldCheck className="size-5" />
+                      Painel de autorizações
                     </Link>
                   </Button>
+                ) : (
+                  <>
+                    <Button asChild size="lg" variant="secondary">
+                      <Link to={auth.user ? "/solicitar" : "/entrar"}>
+                        <CarFront className="size-5" />
+                        {auth.user ? "Nova solicitação" : "Entrar com e-mail institucional"}
+                      </Link>
+                    </Button>
+                    {auth.user && (
+                      <Button
+                        asChild
+                        size="lg"
+                        variant="outline"
+                        className="border-2 border-primary-foreground/70 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/25 hover:text-primary-foreground"
+                      >
+                        <Link to="/painel" search={{ status: "all" }}>
+                          <ClipboardList className="size-5" />
+                          Acompanhar solicitações
+                        </Link>
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
 
