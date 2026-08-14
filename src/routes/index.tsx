@@ -73,7 +73,7 @@ function Index() {
 
   const { data: pendingCount } = useQuery({
     queryKey: ["pending-count", auth.user?.id],
-    enabled: Boolean(auth.user),
+    enabled: Boolean(auth.user) && !auth.isManager,
     queryFn: async () => {
       const { count, error } = await supabase
         .from("vehicle_requests")
