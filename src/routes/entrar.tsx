@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppHeader } from "@/components/AppHeader";
+import { requestPasswordReset } from "@/lib/password.functions";
 import { useSeiaAuth, isInstitutionalEmail, EMAIL_DOMAIN } from "@/lib/seia";
 
 function safeNext(next: unknown): string | null {
@@ -49,6 +51,7 @@ function EntrarPage() {
   const [department, setDepartment] = useState("");
   const [busy, setBusy] = useState(false);
   const [forgot, setForgot] = useState(false);
+  const sendReset = useServerFn(requestPasswordReset);
 
   useEffect(() => {
     if (!auth.user) return;
