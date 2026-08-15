@@ -22,6 +22,7 @@ import { Route as PainelRouteImport } from './routes/painel'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SolicitarRouteImport } from './routes/solicitar'
+import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -92,6 +93,11 @@ const SolicitarRoute = SolicitarRouteImport.update({
   path: '/solicitar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UsuariosRoute = UsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char91DotmcpChar93ListToolsRoute =
   Char91DotmcpChar93ListToolsRouteImport.update({
     id: '/.mcp/list-tools',
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solicitar': typeof SolicitarRoute
+  '/usuarios': typeof UsuariosRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solicitar': typeof SolicitarRoute
+  '/usuarios': typeof UsuariosRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solicitar': typeof SolicitarRoute
+  '/usuarios': typeof UsuariosRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/sitemap.xml'
     | '/solicitar'
+    | '/usuarios'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/sitemap.xml'
     | '/solicitar'
+    | '/usuarios'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/sitemap.xml'
     | '/solicitar'
+    | '/usuarios'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
@@ -248,6 +260,7 @@ export interface RootRouteChildren {
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolicitarRoute: typeof SolicitarRoute
+  UsuariosRoute: typeof UsuariosRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -347,6 +360,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SolicitarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/usuarios': {
+      id: '/usuarios'
+      path: '/usuarios'
+      fullPath: '/usuarios'
+      preLoaderRoute: typeof UsuariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.mcp/list-tools': {
       id: '/.mcp/list-tools'
       path: '/.mcp/list-tools'
@@ -392,6 +412,7 @@ const rootRouteChildren: RootRouteChildren = {
   RedefinirSenhaRoute: RedefinirSenhaRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolicitarRoute: SolicitarRoute,
+  UsuariosRoute: UsuariosRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
