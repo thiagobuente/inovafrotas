@@ -46,6 +46,44 @@ export class NotificationService {
     return results;
   }
 
+  /** Envio avulso de uma mensagem já montada (ex.: redefinição de senha). */
+  async sendCustom(message: NotificationMessage): Promise<DeliveryResult> {
+    const config = await loadEmailSettings();
+    const provider = resolveProvider(config);
+    let result: DeliveryResult;
+    try {
+      result = await provider.send(message);
+    } catch (error) {
+      const reason = error instanceof Error ? error.stack || error.message : String(error);
+      console.error(`[notificacao:avulso:excecao] ${message.to} — ${reason}`);
+      result = {
+        to: message.to,
+        audience: message.audience,
+        status: "failed",
+        provider: provider.name,
+        reason: reason.slice(0, 500),
+      };
+    }
+    console.info(
+      `[notificacao:avulso] ${message.to} status=${result.status} provedor=${result.provider}${result.reason ? ` motivo=${result.reason}` : ""}`,
+    );
+    await this.log({
+      event_type: "password_reset",
+      protocol: "SENHA",
+      requester_email: message.to,
+      recipient: message.to,
+      audience: message.audience,
+      subject: message.subject,
+      status: result.status,
+      provider: result.provider,
+      reason: result.reason ?? null,
+      from_email: result.from ?? `${config.fromName} <${config.fromEmail}>`,
+      reply_to: result.replyTo ?? config.replyTo ?? null,
+      message_id: result.messageId ?? null,
+    });
+    return result;
+  }
+
   /** Envio avulso (e-mail de teste da tela de configurações). */
   async sendTest(to: string, settings?: EmailSettings): Promise<DeliveryResult> {
     const config = settings ?? (await loadEmailSettings());
