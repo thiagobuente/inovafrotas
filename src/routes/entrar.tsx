@@ -66,16 +66,21 @@ function EntrarPage() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/redefinir-senha`,
-    });
-    setBusy(false);
-    if (error) {
-      toast.error("Não foi possível enviar o e-mail: " + error.message);
-      return;
+    try {
+      const result = await sendReset({ data: { email: email.trim().toLowerCase() } });
+      if (result.status && result.status !== "sent") {
+        toast.warning(
+          "Não conseguimos concluir o envio agora. Peça ao gestor de frota para redefinir sua senha.",
+        );
+      } else {
+        toast.success("Enviamos um link de redefinição para o seu e-mail institucional.");
+      }
+      setForgot(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível enviar o e-mail.");
+    } finally {
+      setBusy(false);
     }
-    toast.success("Enviamos um link de redefinição para o seu e-mail institucional.");
-    setForgot(false);
   }
 
 
