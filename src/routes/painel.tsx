@@ -157,12 +157,24 @@ function PainelPage() {
         </div>
 
         <div className="mt-8 space-y-4">
-          {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
+          {isLoading && (
+            <div className="space-y-4">
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+          )}
           {!isLoading && requests?.length === 0 && (
-            <div className="surface-panel p-10 text-center">
-              <p className="text-sm text-muted-foreground">
-                Você ainda não registrou nenhuma solicitação.
+            <div className="surface-panel flex flex-col items-center p-10 text-center">
+              <Inbox className="size-10 text-muted-foreground/60" />
+              <p className="mt-4 text-sm font-medium">Nenhuma solicitação encontrada</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {status === "all"
+                  ? "Você ainda não registrou nenhuma solicitação."
+                  : `Não há solicitações com status "${STATUS_FILTERS.find((f) => f.value === status)?.label}".`}
               </p>
+              <Button asChild className="mt-5" variant="outline" size="sm">
+                <Link to="/solicitar">Fazer uma solicitação</Link>
+              </Button>
             </div>
           )}
           {requests?.map((r) => (
