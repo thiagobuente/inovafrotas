@@ -1,7 +1,8 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { CarFront, LogOut } from "lucide-react";
+import { CarFront, LogOut, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { NotificationBell } from "@/components/NotificationBell";
 import { cn } from "@/lib/utils";
 import type { SeiaAuth } from "@/lib/seia";
@@ -48,20 +49,49 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
         </Link>
 
         {auth.user && (
-          <nav className="hidden items-center gap-1 md:flex">
-            {links.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                className={cn(
-                  "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
-                  pathname === l.to && "bg-secondary text-foreground",
-                )}
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
+          <>
+            <nav className="hidden items-center gap-1 md:flex">
+              {links.map((l) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  className={cn(
+                    "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
+                    pathname === l.to && "bg-secondary text-foreground",
+                  )}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
+
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="md:hidden" aria-label="Abrir menu">
+                  <Menu className="size-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64">
+                <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
+                <nav className="mt-6 flex flex-col gap-2">
+                  {links.map((l) => (
+                    <Link
+                      key={l.to}
+                      to={l.to}
+                      className={cn(
+                        "rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary",
+                        pathname === l.to
+                          ? "bg-secondary text-foreground"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {l.label}
+                    </Link>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </>
         )}
 
         <div className="ml-auto flex items-center gap-3">

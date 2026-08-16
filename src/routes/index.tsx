@@ -147,15 +147,17 @@ function Index() {
                 )}
               </div>
 
-              <p className="mt-5 text-sm opacity-80">
-                <Link
-                  to={auth.isManager ? "/gestao" : "/entrar"}
-                  className="inline-flex items-center gap-2 underline underline-offset-4 hover:opacity-100"
-                >
-                  <ShieldCheck className="size-4" />
-                  Acesso do Gestor · Painel de Aprovações
-                </Link>
-              </p>
+              {!auth.isManager && (
+                <p className="mt-5 text-sm opacity-80">
+                  <Link
+                    to="/entrar"
+                    className="inline-flex items-center gap-2 underline underline-offset-4 hover:opacity-100"
+                  >
+                    <ShieldCheck className="size-4" />
+                    Acesso do Gestor · Painel de Aprovações
+                  </Link>
+                </p>
+              )}
             </div>
 
             <div className="hidden lg:block">
