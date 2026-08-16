@@ -182,7 +182,7 @@ function SolicitarPage() {
               Enviar solicitação
             </Button>
             <Button asChild type="button" variant="outline">
-              <Link to="/painel">Cancelar</Link>
+              <Link to="/painel">Voltar ao painel</Link>
             </Button>
           </div>
         </form>
