@@ -208,24 +208,36 @@ function EntrarPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Senha</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((s) => !s)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                      >
+                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
+                    </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={busy}>
                     Entrar
                   </Button>
-                  <button
+                  <Button
                     type="button"
-                    className="w-full text-sm text-muted-foreground hover:underline"
+                    variant="link"
+                    className="w-full text-sm"
                     onClick={() => setForgot(true)}
                   >
                     Esqueci minha senha
-                  </button>
+                  </Button>
                 </form>
               )}
             </TabsContent>
