@@ -141,10 +141,12 @@ function SolicitarPage() {
             <div className="space-y-2">
               <Label htmlFor="pickup_at">Saída</Label>
               <Input id="pickup_at" name="pickup_at" type="datetime-local" required />
+              <p className="text-xs text-muted-foreground">Informe data e hora de saída prevista.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="return_at">Retorno previsto</Label>
               <Input id="return_at" name="return_at" type="datetime-local" required />
+              <p className="text-xs text-muted-foreground">Deve ser posterior à data de saída.</p>
             </div>
           </div>
 
