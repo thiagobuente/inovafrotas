@@ -309,10 +309,21 @@ function GestaoPage() {
 
 
           <TabsContent value={tab} className="mt-6 space-y-4">
-            {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
+            {isLoading && (
+              <div className="space-y-4">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full" />
+              </div>
+            )}
             {!isLoading && requests?.length === 0 && (
-              <div className="surface-panel p-10 text-center text-sm text-muted-foreground">
-                Nenhuma solicitação nesta lista.
+              <div className="surface-panel flex flex-col items-center p-10 text-center">
+                <Inbox className="size-10 text-muted-foreground/60" />
+                <p className="mt-4 text-sm font-medium">Nenhuma solicitação nesta lista</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {tab === "pending"
+                    ? "Todas as solicitações já foram analisadas."
+                    : `Não há solicitações com status "${MANAGER_TABS.find((t) => t.value === tab)?.label}".`}
+                </p>
               </div>
             )}
             {requests?.map((r) => (
