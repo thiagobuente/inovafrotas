@@ -48,6 +48,7 @@ function EntrarPage() {
   const { next } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [department, setDepartment] = useState("");
   const [busy, setBusy] = useState(false);
