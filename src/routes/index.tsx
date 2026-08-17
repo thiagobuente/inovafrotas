@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CarFront, ShieldCheck, ClipboardList, MailCheck, BellRing } from "lucide-react";
+import { CarFront, ShieldCheck, ClipboardList, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppHeader } from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
