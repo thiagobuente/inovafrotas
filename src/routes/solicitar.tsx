@@ -99,18 +99,30 @@ function SolicitarPage() {
       return;
     }
     if (created) {
-      void notify({
-        data: {
-          type: "request_created",
-          protocol: created.protocol,
-          requesterEmail: created.requester_email,
-          destination: created.destination,
-          agenda: created.agenda,
-          pickupAt: created.pickup_at,
-          returnAt: created.return_at,
-          status: "pending",
-        },
-      }).catch(() => undefined);
+      try {
+        const { results } = await notify({
+          data: {
+            type: "request_created",
+            protocol: created.protocol,
+            requesterEmail: created.requester_email,
+            destination: created.destination,
+            agenda: created.agenda,
+            pickupAt: created.pickup_at,
+            returnAt: created.return_at,
+            status: "pending",
+          },
+        });
+        const manager = results.find((r) => r.audience === "manager");
+        if (manager && manager.status !== "sent") {
+          toast.warning(
+            "Solicitação registrada, mas o e-mail ao gestor não foi entregue. Ele receberá o aviso no mural do sistema.",
+          );
+        }
+      } catch {
+        toast.warning(
+          "Solicitação registrada, mas não foi possível notificar o gestor por e-mail agora.",
+        );
+      }
     }
     toast.success("Solicitação enviada para autorização do gestor.");
     navigate({ to: "/painel" });
