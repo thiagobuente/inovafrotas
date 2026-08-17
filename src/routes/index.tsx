@@ -186,20 +186,6 @@ function Index() {
         </section>
 
 
-        <section className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-2xl font-semibold">Como funciona</h2>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {steps.map((s) => (
-              <article key={s.title} className="surface-panel p-6">
-                <span className="flex size-10 items-center justify-center rounded-lg bg-accent/12 text-accent">
-                  <s.icon className="size-5" />
-                </span>
-                <h3 className="mt-4 text-lg font-semibold">{s.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{s.text}</p>
-              </article>
-            ))}
-          </div>
-        </section>
       </main>
 
       <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
