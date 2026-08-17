@@ -29,23 +29,6 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const steps = [
-  {
-    icon: MailCheck,
-    title: "Acesso institucional",
-    text: `Somente contas com e-mail ${EMAIL_DOMAIN} podem entrar no sistema.`,
-  },
-  {
-    icon: ClipboardList,
-    title: "Solicitação registrada",
-    text: "Informe pauta, destino, período, passageiros e necessidade de motorista.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Autorização do gestor",
-    text: "O gestor de frota analisa, designa o veículo e autoriza ou recusa com justificativa.",
-  },
-];
 
 const VEHICLE_STATUS_LABELS: Record<string, string> = {
   available: "Disponível",
