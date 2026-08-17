@@ -63,11 +63,16 @@ function lines(event: NotificationEvent): [string, string][] {
   return rows;
 }
 
-/** Gera todas as mensagens (solicitante + gestor) de um evento. */
-export function buildMessages(event: NotificationEvent): NotificationMessage[] {
-  const title = headline(event);
-  const rows = lines(event);
-  const text = [`${title} — SEIA`, "", ...rows.map(([k, v]) => `${k}: ${v}`)].join("\n");
+const MANAGEMENT_URL = "https://inovafrotas.lovable.app/gestao";
+
+function render(title: string, rows: [string, string][], callToAction?: string) {
+  const text = [
+    `${title} — SEIA`,
+    "",
+    ...rows.map(([k, v]) => `${k}: ${v}`),
+    ...(callToAction ? ["", callToAction, MANAGEMENT_URL] : []),
+  ].join("\n");
+
   const html = `<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#14202e">
   <h2 style="margin:0 0 12px">${escapeHtml(title)} — SEIA</h2>
   <table cellpadding="6" style="border-collapse:collapse;font-size:14px">
@@ -80,15 +85,47 @@ export function buildMessages(event: NotificationEvent): NotificationMessage[] {
       )
       .join("")}
   </table>
+  ${
+    callToAction
+      ? `<p style="margin:20px 0"><a href="${MANAGEMENT_URL}" style="background:#14202e;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;display:inline-block;font-size:14px">${escapeHtml(
+          callToAction,
+        )}</a></p>`
+      : ""
+  }
   <p style="margin-top:16px;font-size:12px;color:#5b6b7c">Sistema Integrado de Agendamento — Inova Paraná</p>
 </div>`;
 
+  return { text, html };
+}
+
+/** Gera todas as mensagens (solicitante + gestor) de um evento. */
+export function buildMessages(event: NotificationEvent): NotificationMessage[] {
+  const title = headline(event);
+  const rows = lines(event);
+  const base = render(title, rows);
   const subject = `[SEIA] ${title} · ${event.protocol}`;
+
   const recipients: NotificationMessage[] = [
-    { to: event.requesterEmail, audience: "requester", subject, text, html },
+    { to: event.requesterEmail, audience: "requester", subject, text: base.text, html: base.html },
   ];
+
   if (event.requesterEmail.toLowerCase() !== MANAGER_EMAIL) {
-    recipients.push({ to: MANAGER_EMAIL, audience: "manager", subject, text, html });
+    const isPending = event.type === "request_created";
+    const managerTitle = isPending
+      ? "Nova solicitação pendente de autorização"
+      : title;
+    const managerBody = isPending
+      ? render(managerTitle, rows, "Analisar solicitação no painel de gestão")
+      : base;
+    recipients.push({
+      to: MANAGER_EMAIL,
+      audience: "manager",
+      subject: isPending
+        ? `[SEIA] Pendente de autorização · ${event.protocol}`
+        : subject,
+      text: managerBody.text,
+      html: managerBody.html,
+    });
   }
   return recipients;
 }
