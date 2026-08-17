@@ -132,21 +132,32 @@ function EntrarPage() {
       toast.error("Não foi possível cadastrar: " + error.message);
       return;
     }
-    if (data.session) {
+    let session = data.session;
+    if (!session) {
+      const signIn = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (signIn.error) {
+        toast.error("Conta criada. Faça login para continuar.");
+        return;
+      }
+      session = signIn.data.session;
+    }
+    if (session) {
       await supabase.from("profiles").upsert({
-        id: data.session.user.id,
+        id: session.user.id,
         email: email.trim().toLowerCase(),
         full_name: fullName,
         department,
       });
+      toast.success("Conta criada com sucesso.");
       if (next) {
         window.location.href = next;
         return;
       }
       navigate({ to: "/painel" });
-      return;
     }
-    toast.success("Cadastro criado. Confirme o e-mail institucional para acessar.");
   }
 
   return (
