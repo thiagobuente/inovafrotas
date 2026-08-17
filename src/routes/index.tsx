@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AppHeader } from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
 import heroFleet from "@/assets/frota-hero.png";
-import { useSeiaAuth, EMAIL_DOMAIN } from "@/lib/seia";
+import { useSeiaAuth } from "@/lib/seia";
 
 export const Route = createFileRoute("/")({
   head: () => ({
