@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -6,10 +6,34 @@ import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { listAccounts, managerResetPassword } from "@/lib/password.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  listAccounts,
+  managerResetPassword,
+  managerUpdateAccount,
+  managerDeleteAccount,
+} from "@/lib/password.functions";
 import { useSeiaAuth, EMAIL_DOMAIN } from "@/lib/seia";
 
 type Account = { id: string; email: string; full_name: string; department: string | null };
+
 
 export const Route = createFileRoute("/usuarios")({
   head: () => ({
@@ -36,18 +60,27 @@ function UsuariosPage() {
   const auth = useSeiaAuth();
   const fetchAccounts = useServerFn(listAccounts);
   const resetPassword = useServerFn(managerResetPassword);
+  const updateAccount = useServerFn(managerUpdateAccount);
+  const deleteAccount = useServerFn(managerDeleteAccount);
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<Account | null>(null);
+  const [editForm, setEditForm] = useState({ full_name: "", department: "", email: "" });
+  const [removing, setRemoving] = useState<Account | null>(null);
 
-  useEffect(() => {
-    if (!auth.isManager) return;
+  const loadAccounts = useCallback(() => {
     fetchAccounts()
       .then((r) => setAccounts(r.accounts as Account[]))
       .catch(() => setAccounts([]));
-  }, [auth.isManager, fetchAccounts]);
+  }, [fetchAccounts]);
+
+  useEffect(() => {
+    if (!auth.isManager) return;
+    loadAccounts();
+  }, [auth.isManager, loadAccounts]);
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
@@ -62,6 +95,56 @@ function UsuariosPage() {
       setBusy(false);
     }
   }
+
+  function openEdit(account: Account) {
+    setEditing(account);
+    setEditForm({
+      full_name: account.full_name ?? "",
+      department: account.department ?? "",
+      email: account.email,
+    });
+  }
+
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editing) return;
+    setBusy(true);
+    try {
+      await updateAccount({
+        data: {
+          id: editing.id,
+          full_name: editForm.full_name,
+          department: editForm.department,
+          ...(editForm.email.trim().toLowerCase() !== editing.email
+            ? { email: editForm.email }
+            : {}),
+        },
+      });
+      toast.success("Perfil atualizado.");
+      setEditing(null);
+      loadAccounts();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o perfil.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!removing) return;
+    setBusy(true);
+    try {
+      await deleteAccount({ data: { id: removing.id } });
+      toast.success(`Conta ${removing.email} excluída.`);
+      setRemoving(null);
+      loadAccounts();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível excluir a conta.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   if (auth.loading) return null;
 
@@ -130,14 +213,33 @@ function UsuariosPage() {
           <h2 className="text-lg font-semibold">Contas cadastradas</h2>
           <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
             {accounts.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-4 px-4 py-3">
+              <li
+                key={a.id}
+                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+              >
                 <div>
                   <p className="text-sm font-medium">{a.full_name || "—"}</p>
                   <p className="text-xs text-muted-foreground">{a.email}</p>
+                  {a.department && (
+                    <p className="text-xs text-muted-foreground">Setor: {a.department}</p>
+                  )}
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setEmail(a.email)}>
-                  Selecionar
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setEmail(a.email)}>
+                    Selecionar
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => openEdit(a)}>
+                    Editar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={a.id === auth.user?.id}
+                    onClick={() => setRemoving(a)}
+                  >
+                    Excluir
+                  </Button>
+                </div>
               </li>
             ))}
             {accounts.length === 0 && (
@@ -145,7 +247,76 @@ function UsuariosPage() {
             )}
           </ul>
         </section>
+
+        <Dialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar perfil</DialogTitle>
+              <DialogDescription>
+                Atualize os dados cadastrais da conta institucional.
+              </DialogDescription>
+            </DialogHeader>
+            <form className="space-y-4" onSubmit={handleEdit}>
+              <div className="space-y-2">
+                <Label htmlFor="edit-nome">Nome completo</Label>
+                <Input
+                  id="edit-nome"
+                  value={editForm.full_name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, full_name: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-setor">Setor</Label>
+                <Input
+                  id="edit-setor"
+                  value={editForm.department}
+                  onChange={(e) => setEditForm((f) => ({ ...f, department: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">E-mail institucional</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  required
+                  value={editForm.email}
+                  onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Deve terminar em {EMAIL_DOMAIN}.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={busy}>
+                  Salvar alterações
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <AlertDialog open={Boolean(removing)} onOpenChange={(open) => !open && setRemoving(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir conta</AlertDialogTitle>
+              <AlertDialogDescription>
+                A conta {removing?.email} será removida definitivamente. Contas com solicitações
+                registradas são preservadas para auditoria.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction disabled={busy} onClick={handleDelete}>
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
 }
+

@@ -117,3 +117,76 @@ export const managerResetPassword = createServerFn({ method: "POST" })
     console.info(`[senha] gestor ${context.userId} redefiniu a senha de ${data.email}`);
     return { ok: true, email: profile.email };
   });
+
+/** O gestor atualiza os dados cadastrais de uma conta institucional. */
+export const managerUpdateAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; full_name: string; department?: string | null; email?: string }) => {
+    const id = typeof input?.id === "string" ? input.id.trim() : "";
+    if (!id) throw new Error("Conta inválida.");
+    return {
+      id,
+      full_name: typeof input?.full_name === "string" ? input.full_name.trim() : "",
+      department:
+        typeof input?.department === "string" && input.department.trim() ? input.department.trim() : null,
+      email: input?.email ? normalizeEmail(input.email) : undefined,
+    };
+  })
+  .handler(async ({ data, context }) => {
+    await requireManager(context as never);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    if (data.email) {
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(data.id, {
+        email: data.email,
+        email_confirm: true,
+      });
+      if (error) throw new Error(`Não foi possível atualizar o e-mail: ${error.message}`);
+    }
+
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        full_name: data.full_name,
+        department: data.department,
+        ...(data.email ? { email: data.email } : {}),
+      })
+      .eq("id", data.id);
+    if (profileError) throw new Error(`Não foi possível atualizar o perfil: ${profileError.message}`);
+
+    console.info(`[contas] gestor ${context.userId} atualizou a conta ${data.id}`);
+    return { ok: true };
+  });
+
+/** O gestor exclui definitivamente uma conta institucional. */
+export const managerDeleteAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => {
+    const id = typeof input?.id === "string" ? input.id.trim() : "";
+    if (!id) throw new Error("Conta inválida.");
+    return { id };
+  })
+  .handler(async ({ data, context }) => {
+    await requireManager(context as never);
+    if (data.id === context.userId) throw new Error("Você não pode excluir a sua própria conta.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: hasRequests, error: requestError } = await supabaseAdmin
+      .from("vehicle_requests")
+      .select("id")
+      .eq("requester_id", data.id)
+      .limit(1);
+    if (requestError) throw new Error(`Não foi possível verificar as solicitações: ${requestError.message}`);
+    if (hasRequests && hasRequests.length > 0) {
+      throw new Error(
+        "Esta conta possui solicitações registradas e não pode ser excluída (histórico de auditoria).",
+      );
+    }
+
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.id);
+    if (error) throw new Error(`Não foi possível excluir a conta: ${error.message}`);
+
+    console.info(`[contas] gestor ${context.userId} excluiu a conta ${data.id}`);
+    return { ok: true };
+  });
