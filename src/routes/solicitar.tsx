@@ -187,6 +187,23 @@ function SolicitarPage() {
             </div>
           </div>
 
+          {!needsDriver && (
+            <div className="space-y-2">
+              <Label htmlFor="external_driver_name">Nome do condutor</Label>
+              <Input
+                id="external_driver_name"
+                name="external_driver_name"
+                placeholder="Informe quem irá conduzir o veículo"
+                maxLength={255}
+                value={externalDriver}
+                onChange={(e) => setExternalDriver(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Obrigatório informar o nome do responsável pela condução quando não solicitar motorista oficial.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="notes">Observações</Label>
             <Textarea id="notes" name="notes" rows={2} maxLength={1000} />
