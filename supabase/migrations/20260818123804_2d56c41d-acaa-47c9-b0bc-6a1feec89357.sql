@@ -1,0 +1,1 @@
+alter table public.vehicle_requests add column if not exists external_driver_name text;

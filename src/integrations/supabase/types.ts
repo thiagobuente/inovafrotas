@@ -317,6 +317,7 @@ export type Database = {
           decided_by: string | null
           decision_note: string | null
           destination: string
+          external_driver_name: string | null
           id: string
           needs_driver: boolean
           notes: string | null
@@ -338,6 +339,7 @@ export type Database = {
           decided_by?: string | null
           decision_note?: string | null
           destination: string
+          external_driver_name?: string | null
           id?: string
           needs_driver?: boolean
           notes?: string | null
@@ -359,6 +361,7 @@ export type Database = {
           decided_by?: string | null
           decision_note?: string | null
           destination?: string
+          external_driver_name?: string | null
           id?: string
           needs_driver?: boolean
           notes?: string | null
