@@ -213,6 +213,12 @@ function PainelPage() {
                 </div>
               </dl>
 
+              {!r.needs_driver && r.external_driver_name && (
+                <p className="mt-4 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  Condutor informado: {r.external_driver_name}
+                </p>
+              )}
+
               {r.vehicles && (
                 <p className="mt-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
                   Veículo designado: {r.vehicles.brand} {r.vehicles.model} · {r.vehicles.plate}
