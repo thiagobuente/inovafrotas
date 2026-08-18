@@ -39,6 +39,7 @@ function SolicitarPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [needsDriver, setNeedsDriver] = useState(false);
+  const [externalDriver, setExternalDriver] = useState("");
   const notify = useServerFn(sendNotification);
 
   useEffect(() => {
@@ -77,6 +78,7 @@ function SolicitarPage() {
     }
 
     setBusy(true);
+    const externalDriverName = needsDriver ? null : String(form.get("external_driver_name") || "").trim() || null;
     const { data: created, error } = await supabase
       .from("vehicle_requests")
       .insert({
@@ -88,6 +90,7 @@ function SolicitarPage() {
       return_at: new Date(ret).toISOString(),
       passengers_count: Number(form.get("passengers_count") || 1),
       needs_driver: needsDriver,
+      external_driver_name: externalDriverName,
         notes: String(form.get("notes") || "").trim() || null,
       })
       .select("protocol, requester_email, destination, agenda, pickup_at, return_at")
@@ -183,6 +186,23 @@ function SolicitarPage() {
               <Switch id="needs_driver" checked={needsDriver} onCheckedChange={setNeedsDriver} />
             </div>
           </div>
+
+          {!needsDriver && (
+            <div className="space-y-2">
+              <Label htmlFor="external_driver_name">Nome do condutor</Label>
+              <Input
+                id="external_driver_name"
+                name="external_driver_name"
+                placeholder="Informe quem irá conduzir o veículo"
+                maxLength={255}
+                value={externalDriver}
+                onChange={(e) => setExternalDriver(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Obrigatório informar o nome do responsável pela condução quando não solicitar motorista oficial.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="notes">Observações</Label>
