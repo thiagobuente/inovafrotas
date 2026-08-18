@@ -213,14 +213,33 @@ function UsuariosPage() {
           <h2 className="text-lg font-semibold">Contas cadastradas</h2>
           <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
             {accounts.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-4 px-4 py-3">
+              <li
+                key={a.id}
+                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+              >
                 <div>
                   <p className="text-sm font-medium">{a.full_name || "—"}</p>
                   <p className="text-xs text-muted-foreground">{a.email}</p>
+                  {a.department && (
+                    <p className="text-xs text-muted-foreground">Setor: {a.department}</p>
+                  )}
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setEmail(a.email)}>
-                  Selecionar
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setEmail(a.email)}>
+                    Selecionar
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => openEdit(a)}>
+                    Editar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={a.id === auth.user?.id}
+                    onClick={() => setRemoving(a)}
+                  >
+                    Excluir
+                  </Button>
+                </div>
               </li>
             ))}
             {accounts.length === 0 && (
@@ -228,7 +247,76 @@ function UsuariosPage() {
             )}
           </ul>
         </section>
+
+        <Dialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar perfil</DialogTitle>
+              <DialogDescription>
+                Atualize os dados cadastrais da conta institucional.
+              </DialogDescription>
+            </DialogHeader>
+            <form className="space-y-4" onSubmit={handleEdit}>
+              <div className="space-y-2">
+                <Label htmlFor="edit-nome">Nome completo</Label>
+                <Input
+                  id="edit-nome"
+                  value={editForm.full_name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, full_name: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-setor">Setor</Label>
+                <Input
+                  id="edit-setor"
+                  value={editForm.department}
+                  onChange={(e) => setEditForm((f) => ({ ...f, department: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">E-mail institucional</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  required
+                  value={editForm.email}
+                  onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Deve terminar em {EMAIL_DOMAIN}.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={busy}>
+                  Salvar alterações
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <AlertDialog open={Boolean(removing)} onOpenChange={(open) => !open && setRemoving(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir conta</AlertDialogTitle>
+              <AlertDialogDescription>
+                A conta {removing?.email} será removida definitivamente. Contas com solicitações
+                registradas são preservadas para auditoria.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction disabled={busy} onClick={handleDelete}>
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
 }
+
