@@ -60,18 +60,27 @@ function UsuariosPage() {
   const auth = useSeiaAuth();
   const fetchAccounts = useServerFn(listAccounts);
   const resetPassword = useServerFn(managerResetPassword);
+  const updateAccount = useServerFn(managerUpdateAccount);
+  const deleteAccount = useServerFn(managerDeleteAccount);
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<Account | null>(null);
+  const [editForm, setEditForm] = useState({ full_name: "", department: "", email: "" });
+  const [removing, setRemoving] = useState<Account | null>(null);
 
-  useEffect(() => {
-    if (!auth.isManager) return;
+  const loadAccounts = useCallback(() => {
     fetchAccounts()
       .then((r) => setAccounts(r.accounts as Account[]))
       .catch(() => setAccounts([]));
-  }, [auth.isManager, fetchAccounts]);
+  }, [fetchAccounts]);
+
+  useEffect(() => {
+    if (!auth.isManager) return;
+    loadAccounts();
+  }, [auth.isManager, loadAccounts]);
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
@@ -86,6 +95,56 @@ function UsuariosPage() {
       setBusy(false);
     }
   }
+
+  function openEdit(account: Account) {
+    setEditing(account);
+    setEditForm({
+      full_name: account.full_name ?? "",
+      department: account.department ?? "",
+      email: account.email,
+    });
+  }
+
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editing) return;
+    setBusy(true);
+    try {
+      await updateAccount({
+        data: {
+          id: editing.id,
+          full_name: editForm.full_name,
+          department: editForm.department,
+          ...(editForm.email.trim().toLowerCase() !== editing.email
+            ? { email: editForm.email }
+            : {}),
+        },
+      });
+      toast.success("Perfil atualizado.");
+      setEditing(null);
+      loadAccounts();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o perfil.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!removing) return;
+    setBusy(true);
+    try {
+      await deleteAccount({ data: { id: removing.id } });
+      toast.success(`Conta ${removing.email} excluída.`);
+      setRemoving(null);
+      loadAccounts();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível excluir a conta.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   if (auth.loading) return null;
 
