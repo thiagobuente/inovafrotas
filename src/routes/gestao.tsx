@@ -415,6 +415,12 @@ function RequestCard({
         </div>
       </dl>
 
+      {!request.needs_driver && request.external_driver_name && (
+        <p className="mt-3 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+          Condutor informado pelo solicitante: {request.external_driver_name}
+        </p>
+      )}
+
       {request.notes && (
         <p className="mt-3 text-sm text-muted-foreground">Observações: {request.notes}</p>
       )}
