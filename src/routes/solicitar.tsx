@@ -39,6 +39,7 @@ function SolicitarPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [needsDriver, setNeedsDriver] = useState(false);
+  const [externalDriver, setExternalDriver] = useState("");
   const notify = useServerFn(sendNotification);
 
   useEffect(() => {
