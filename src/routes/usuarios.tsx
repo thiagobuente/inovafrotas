@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -6,10 +6,34 @@ import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { listAccounts, managerResetPassword } from "@/lib/password.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  listAccounts,
+  managerResetPassword,
+  managerUpdateAccount,
+  managerDeleteAccount,
+} from "@/lib/password.functions";
 import { useSeiaAuth, EMAIL_DOMAIN } from "@/lib/seia";
 
 type Account = { id: string; email: string; full_name: string; department: string | null };
+
 
 export const Route = createFileRoute("/usuarios")({
   head: () => ({
