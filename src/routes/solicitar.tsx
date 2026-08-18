@@ -78,6 +78,7 @@ function SolicitarPage() {
     }
 
     setBusy(true);
+    const externalDriverName = needsDriver ? null : String(form.get("external_driver_name") || "").trim() || null;
     const { data: created, error } = await supabase
       .from("vehicle_requests")
       .insert({
@@ -89,6 +90,7 @@ function SolicitarPage() {
       return_at: new Date(ret).toISOString(),
       passengers_count: Number(form.get("passengers_count") || 1),
       needs_driver: needsDriver,
+      external_driver_name: externalDriverName,
         notes: String(form.get("notes") || "").trim() || null,
       })
       .select("protocol, requester_email, destination, agenda, pickup_at, return_at")
