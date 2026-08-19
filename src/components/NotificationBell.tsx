@@ -66,7 +66,10 @@ export function NotificationBell({ email, isManager }: { email: string; isManage
         .eq("id", item.id);
       queryClient.invalidateQueries({ queryKey: ["user-notifications", email] });
     }
-    navigate({ to: isManager ? "/gestao" : "/painel", search: { status: "all" } });
+    navigate({
+      to: isManager ? "/gestao" : "/painel",
+      search: { status: "all", protocol: item.protocol ?? undefined },
+    });
   }
 
   return (
