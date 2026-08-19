@@ -76,7 +76,9 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
         .from("diario-bordo")
         .createSignedUrls(currentPhotos, 3600);
       if (error) throw error;
-      return (data ?? []).map((d, i) => ({ path: currentPhotos[i], url: d.signedUrl }));
+      return (data ?? [])
+        .filter((d) => !!d.signedUrl)
+        .map((d, i) => ({ path: currentPhotos[i], url: d.signedUrl as string }));
     },
   });
 
