@@ -25,8 +25,9 @@ function fmt(value: string) {
   });
 }
 
-export function NotificationBell({ email }: { email: string }) {
+export function NotificationBell({ email, isManager }: { email: string; isManager?: boolean }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data } = useQuery({
     queryKey: ["user-notifications", email],
