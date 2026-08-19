@@ -212,6 +212,7 @@ export type Database = {
           fuel_liters: number | null
           id: string
           incidents: string | null
+          photo_paths: string[]
           request_id: string
           return_at: string | null
           return_km: number | null
@@ -225,6 +226,7 @@ export type Database = {
           fuel_liters?: number | null
           id?: string
           incidents?: string | null
+          photo_paths?: string[]
           request_id: string
           return_at?: string | null
           return_km?: number | null
@@ -238,6 +240,7 @@ export type Database = {
           fuel_liters?: number | null
           id?: string
           incidents?: string | null
+          photo_paths?: string[]
           request_id?: string
           return_at?: string | null
           return_km?: number | null
