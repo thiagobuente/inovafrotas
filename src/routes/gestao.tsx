@@ -32,8 +32,11 @@ const MANAGER_TABS = [
 
 
 export const Route = createFileRoute("/gestao")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { status: string; protocol?: string } => ({
     status: typeof search.status === "string" ? search.status : "pending",
+    protocol: typeof search.protocol === "string" ? search.protocol : undefined,
   }),
   head: () => ({
     meta: [
