@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { X } from "lucide-react";
 
 type Form = {
   departure_at: string;
@@ -36,6 +37,8 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form | null>(null);
+  const [photos, setPhotos] = useState<string[] | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { data: log, isLoading } = useQuery({
     queryKey: ["trip-log", requestId],
@@ -63,6 +66,50 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
         }
       : EMPTY);
 
+  const currentPhotos = photos ?? (log?.photo_paths ?? []);
+
+  const { data: photoUrls = [] } = useQuery({
+    queryKey: ["trip-log-photos", requestId, currentPhotos],
+    enabled: currentPhotos.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage
+        .from("diario-bordo")
+        .createSignedUrls(currentPhotos, 3600);
+      if (error) throw error;
+      return (data ?? []).map((d, i) => ({ path: currentPhotos[i], url: d.signedUrl }));
+    },
+  });
+
+  async function handleUpload(files: FileList | null) {
+    if (!files?.length) return;
+    setUploading(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) throw new Error("Sessão expirada. Entre novamente.");
+      const uploaded: string[] = [];
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) throw new Error("Envie apenas imagens.");
+        if (file.size > 5 * 1024 * 1024) throw new Error("Cada foto deve ter até 5 MB.");
+        const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+        const path = `${uid}/${requestId}/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage.from("diario-bordo").upload(path, file);
+        if (error) throw error;
+        uploaded.push(path);
+      }
+      setPhotos([...currentPhotos, ...uploaded]);
+      toast.success("Foto(s) anexada(s). Salve o diário para confirmar.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removePhoto(path: string) {
+    setPhotos(currentPhotos.filter((p) => p !== path));
+  }
+
   const save = useMutation({
     mutationFn: async () => {
       const payload = {
@@ -73,6 +120,7 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
         return_km: current.return_km ? Number(current.return_km) : null,
         fuel_liters: current.fuel_liters ? Number(current.fuel_liters) : null,
         incidents: current.incidents.trim() || null,
+        photo_paths: currentPhotos,
       };
       if (
         payload.departure_km !== null &&
@@ -89,6 +137,7 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
     onSuccess: () => {
       toast.success("Diário de bordo registrado.");
       setForm(null);
+      setPhotos(null);
       queryClient.invalidateQueries({ queryKey: ["trip-log", requestId] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -110,6 +159,9 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
                     totalKm != null ? ` · ${totalKm} km rodados` : ""
                   }`
                 : "Ainda não preenchido."}
+            {log && (log.photo_paths?.length ?? 0) > 0
+              ? ` · ${log.photo_paths.length} foto(s)`
+              : ""}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => setOpen((v) => !v)}>
@@ -172,6 +224,46 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
               onChange={(e) => setForm({ ...current, incidents: e.target.value })}
               placeholder="Avarias, atrasos, multas ou observações da viagem"
             />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Fotos (KM, avarias, comprovantes)</Label>
+            <Input
+              type="file"
+              accept="image/*"
+              multiple
+              capture="environment"
+              disabled={uploading}
+              onChange={(e) => {
+                void handleUpload(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <p className="text-xs text-muted-foreground">
+              {uploading ? "Enviando…" : "Até 5 MB por imagem. Use a câmera ou a galeria."}
+            </p>
+            {photoUrls.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {photoUrls.map((p) => (
+                  <div key={p.path} className="relative">
+                    <a href={p.url} target="_blank" rel="noreferrer">
+                      <img
+                        src={p.url}
+                        alt="Foto do diário de bordo"
+                        className="h-20 w-20 rounded-md border border-border object-cover"
+                      />
+                    </a>
+                    <button
+                      type="button"
+                      aria-label="Remover foto"
+                      onClick={() => removePhoto(p.path)}
+                      className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <Button size="sm" disabled={save.isPending} onClick={() => save.mutate()}>
