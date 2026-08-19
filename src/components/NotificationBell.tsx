@@ -1,9 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { Bell, CheckCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 type Item = {
   id: string;
@@ -23,8 +25,9 @@ function fmt(value: string) {
   });
 }
 
-export function NotificationBell({ email }: { email: string }) {
+export function NotificationBell({ email, isManager }: { email: string; isManager?: boolean }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data } = useQuery({
     queryKey: ["user-notifications", email],
@@ -55,6 +58,17 @@ export function NotificationBell({ email }: { email: string }) {
     queryClient.invalidateQueries({ queryKey: ["user-notifications", email] });
   }
 
+  async function openItem(item: Item) {
+    if (!item.read_at) {
+      await supabase
+        .from("user_notifications")
+        .update({ read_at: new Date().toISOString() })
+        .eq("id", item.id);
+      queryClient.invalidateQueries({ queryKey: ["user-notifications", email] });
+    }
+    navigate({ to: isManager ? "/gestao" : "/painel", search: { status: "all" } });
+  }
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -83,7 +97,19 @@ export function NotificationBell({ email }: { email: string }) {
               {items.map((item) => (
                 <li
                   key={item.id}
-                  className={item.read_at ? "px-4 py-3" : "bg-secondary/50 px-4 py-3"}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openItem(item)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openItem(item);
+                    }
+                  }}
+                  className={cn(
+                    "cursor-pointer px-4 py-3 transition-colors hover:bg-accent",
+                    item.read_at ? "bg-background" : "bg-secondary/50",
+                  )}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-medium leading-tight">{item.title}</p>

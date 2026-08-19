@@ -97,7 +97,7 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
         <div className="ml-auto flex items-center gap-3">
           {auth.user ? (
             <>
-              <NotificationBell email={auth.user.email ?? ""} />
+              <NotificationBell email={auth.user.email ?? ""} isManager={auth.isManager} />
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-medium leading-tight">{auth.user.email}</p>
                 <p className="text-xs text-muted-foreground">
