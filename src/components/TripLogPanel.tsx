@@ -220,17 +220,27 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
                   onChange={(e) => setForm({ ...current, incidents: e.target.value })}
                   placeholder="Avarias, atrasos, multas ou observações da viagem"
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setForm({ ...current, incidents: "" });
-                    setShowIncidents(false);
-                  }}
-                >
-                  Sem ocorrências
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowIncidents(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setForm({ ...current, incidents: "" });
+                      setShowIncidents(false);
+                    }}
+                  >
+                    Sem ocorrências
+                  </Button>
+                </div>
               </>
             ) : (
               <div>
