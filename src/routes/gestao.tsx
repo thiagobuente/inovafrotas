@@ -87,7 +87,7 @@ function GestaoPage() {
   const auth = useSeiaAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { status: tab } = Route.useSearch();
+  const { status: tab, protocol: focusProtocol } = Route.useSearch();
   const notify = useServerFn(sendNotification);
 
   useEffect(() => {
