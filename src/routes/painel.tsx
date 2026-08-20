@@ -181,7 +181,14 @@ function PainelPage() {
             </div>
           )}
           {requests?.map((r) => (
-            <article key={r.id} className="surface-panel p-6">
+            <article
+              key={r.id}
+              id={`req-${r.protocol}`}
+              className={cn(
+                "surface-panel p-6 scroll-mt-24 transition-shadow",
+                focusProtocol === r.protocol && "ring-2 ring-primary",
+              )}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-mono uppercase text-muted-foreground">{r.protocol}</p>
