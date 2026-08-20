@@ -54,7 +54,7 @@ export const Route = createFileRoute("/painel")({
 function PainelPage() {
   const auth = useSeiaAuth();
   const navigate = useNavigate();
-  const { status } = Route.useSearch();
+  const { status, protocol: focusProtocol } = Route.useSearch();
   const queryClient = useQueryClient();
   const notify = useServerFn(sendNotification);
   const [cancelId, setCancelId] = useState<string | null>(null);
@@ -86,6 +86,11 @@ function PainelPage() {
     },
   });
 
+  useEffect(() => {
+    if (!focusProtocol || !requests?.length) return;
+    const el = document.getElementById(`req-${focusProtocol}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusProtocol, requests]);
 
   async function cancelRequest(request: Record<string, any>) {
     const reason = cancelReason.trim();
@@ -181,7 +186,14 @@ function PainelPage() {
             </div>
           )}
           {requests?.map((r) => (
-            <article key={r.id} className="surface-panel p-6">
+            <article
+              key={r.id}
+              id={`req-${r.protocol}`}
+              className={cn(
+                "surface-panel p-6 scroll-mt-24 transition-shadow",
+                focusProtocol === r.protocol && "ring-2 ring-primary",
+              )}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-mono uppercase text-muted-foreground">{r.protocol}</p>
