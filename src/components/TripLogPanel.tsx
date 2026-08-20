@@ -39,10 +39,6 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
   const [uploading, setUploading] = useState(false);
   const [showIncidents, setShowIncidents] = useState(false);
 
-  useEffect(() => {
-    // opens the incidents box automatically when the log already has one
-  }, []);
-
   const { data: log, isLoading } = useQuery({
     queryKey: ["trip-log", requestId],
     queryFn: async () => {
