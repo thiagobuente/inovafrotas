@@ -374,7 +374,9 @@ function RequestCard({
   vehicles,
   drivers,
   onDecide,
+  highlight,
 }: {
+  highlight?: boolean;
   request: Record<string, any>;
   vehicles: VehicleRow[];
   drivers: DriverRow[];
