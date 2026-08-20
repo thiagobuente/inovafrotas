@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
+import { MessageSquarePlus, X } from "lucide-react";
 
 type Form = {
   departure_at: string;
   departure_km: string;
   return_at: string;
   return_km: string;
-  fuel_liters: string;
   incidents: string;
 };
 
@@ -22,7 +21,6 @@ const EMPTY: Form = {
   departure_km: "",
   return_at: "",
   return_km: "",
-  fuel_liters: "",
   incidents: "",
 };
 
@@ -39,6 +37,7 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
   const [form, setForm] = useState<Form | null>(null);
   const [photos, setPhotos] = useState<string[] | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showIncidents, setShowIncidents] = useState(false);
 
   const { data: log, isLoading } = useQuery({
     queryKey: ["trip-log", requestId],
@@ -61,10 +60,14 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
           departure_km: log.departure_km?.toString() ?? "",
           return_at: toLocalInput(log.return_at),
           return_km: log.return_km?.toString() ?? "",
-          fuel_liters: log.fuel_liters?.toString() ?? "",
           incidents: log.incidents ?? "",
         }
       : EMPTY);
+
+  useEffect(() => {
+    if (log?.incidents) setShowIncidents(true);
+  }, [log?.incidents]);
+
 
   const currentPhotos = photos ?? (log?.photo_paths ?? []);
 
@@ -120,7 +123,6 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
         departure_km: current.departure_km ? Number(current.departure_km) : null,
         return_at: current.return_at ? new Date(current.return_at).toISOString() : null,
         return_km: current.return_km ? Number(current.return_km) : null,
-        fuel_liters: current.fuel_liters ? Number(current.fuel_liters) : null,
         incidents: current.incidents.trim() || null,
         photo_paths: currentPhotos,
       };
@@ -207,25 +209,45 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
               onChange={(e) => setForm({ ...current, return_km: e.target.value })}
             />
           </div>
-          <div className="space-y-2">
-            <Label>Litros abastecidos</Label>
-            <Input
-              type="number"
-              step="0.01"
-              min={0}
-              value={current.fuel_liters}
-              onChange={(e) => setForm({ ...current, fuel_liters: e.target.value })}
-            />
-          </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Ocorrências</Label>
-            <Textarea
-              rows={2}
-              maxLength={800}
-              value={current.incidents}
-              onChange={(e) => setForm({ ...current, incidents: e.target.value })}
-              placeholder="Avarias, atrasos, multas ou observações da viagem"
-            />
+            {showIncidents ? (
+              <>
+                <Textarea
+                  rows={3}
+                  maxLength={800}
+                  value={current.incidents}
+                  onChange={(e) => setForm({ ...current, incidents: e.target.value })}
+                  placeholder="Avarias, atrasos, multas ou observações da viagem"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setForm({ ...current, incidents: "" });
+                    setShowIncidents(false);
+                  }}
+                >
+                  Sem ocorrências
+                </Button>
+              </>
+            ) : (
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowIncidents(true)}
+                >
+                  <MessageSquarePlus className="size-4" />
+                  Registrar ocorrência
+                </Button>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Clique apenas se houve alguma ocorrência na viagem.
+                </p>
+              </div>
+            )}
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Fotos (KM, avarias, comprovantes)</Label>

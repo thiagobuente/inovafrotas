@@ -7,6 +7,7 @@ import { Inbox } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { TripLogViewer } from "@/components/TripLogViewer";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -453,6 +454,10 @@ function RequestCard({
             Motivo: {request.decision_note}
           </p>
         )}
+
+      {(request.status === "approved" || request.status === "completed") && (
+        <TripLogViewer request={request as never} />
+      )}
 
       {request.status === "approved" && (
         <div className="mt-6 space-y-3 border-t border-border pt-5">
