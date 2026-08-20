@@ -112,6 +112,13 @@ function GestaoPage() {
     },
   });
 
+  useEffect(() => {
+    if (!focusProtocol || !requests?.length) return;
+    document
+      .getElementById(`req-${focusProtocol}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusProtocol, requests]);
+
   const { data: counts } = useQuery({
     queryKey: ["request-counts"],
     enabled: Boolean(auth.user) && auth.isManager,
