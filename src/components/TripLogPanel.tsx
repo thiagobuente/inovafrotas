@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,6 @@ type Form = {
   departure_km: string;
   return_at: string;
   return_km: string;
-  fuel_liters: string;
   incidents: string;
 };
 
@@ -22,7 +21,6 @@ const EMPTY: Form = {
   departure_km: "",
   return_at: "",
   return_km: "",
-  fuel_liters: "",
   incidents: "",
 };
 
@@ -40,6 +38,10 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
   const [photos, setPhotos] = useState<string[] | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showIncidents, setShowIncidents] = useState(false);
+
+  useEffect(() => {
+    // opens the incidents box automatically when the log already has one
+  }, []);
 
   const { data: log, isLoading } = useQuery({
     queryKey: ["trip-log", requestId],
@@ -62,7 +64,6 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
           departure_km: log.departure_km?.toString() ?? "",
           return_at: toLocalInput(log.return_at),
           return_km: log.return_km?.toString() ?? "",
-          fuel_liters: log.fuel_liters?.toString() ?? "",
           incidents: log.incidents ?? "",
         }
       : EMPTY);
@@ -121,7 +122,6 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
         departure_km: current.departure_km ? Number(current.departure_km) : null,
         return_at: current.return_at ? new Date(current.return_at).toISOString() : null,
         return_km: current.return_km ? Number(current.return_km) : null,
-        fuel_liters: current.fuel_liters ? Number(current.fuel_liters) : null,
         incidents: current.incidents.trim() || null,
         photo_paths: currentPhotos,
       };
