@@ -54,7 +54,7 @@ export const Route = createFileRoute("/painel")({
 function PainelPage() {
   const auth = useSeiaAuth();
   const navigate = useNavigate();
-  const { status } = Route.useSearch();
+  const { status, protocol: focusProtocol } = Route.useSearch();
   const queryClient = useQueryClient();
   const notify = useServerFn(sendNotification);
   const [cancelId, setCancelId] = useState<string | null>(null);
