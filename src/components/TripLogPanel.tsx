@@ -207,25 +207,45 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
               onChange={(e) => setForm({ ...current, return_km: e.target.value })}
             />
           </div>
-          <div className="space-y-2">
-            <Label>Litros abastecidos</Label>
-            <Input
-              type="number"
-              step="0.01"
-              min={0}
-              value={current.fuel_liters}
-              onChange={(e) => setForm({ ...current, fuel_liters: e.target.value })}
-            />
-          </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Ocorrências</Label>
-            <Textarea
-              rows={2}
-              maxLength={800}
-              value={current.incidents}
-              onChange={(e) => setForm({ ...current, incidents: e.target.value })}
-              placeholder="Avarias, atrasos, multas ou observações da viagem"
-            />
+            {showIncidents ? (
+              <>
+                <Textarea
+                  rows={3}
+                  maxLength={800}
+                  value={current.incidents}
+                  onChange={(e) => setForm({ ...current, incidents: e.target.value })}
+                  placeholder="Avarias, atrasos, multas ou observações da viagem"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setForm({ ...current, incidents: "" });
+                    setShowIncidents(false);
+                  }}
+                >
+                  Sem ocorrências
+                </Button>
+              </>
+            ) : (
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowIncidents(true)}
+                >
+                  <MessageSquarePlus className="size-4" />
+                  Registrar ocorrência
+                </Button>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Clique apenas se houve alguma ocorrência na viagem.
+                </p>
+              </div>
+            )}
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Fotos (KM, avarias, comprovantes)</Label>
