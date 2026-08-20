@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
+import { MessageSquarePlus, X } from "lucide-react";
 
 type Form = {
   departure_at: string;
@@ -39,6 +39,7 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
   const [form, setForm] = useState<Form | null>(null);
   const [photos, setPhotos] = useState<string[] | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showIncidents, setShowIncidents] = useState(false);
 
   const { data: log, isLoading } = useQuery({
     queryKey: ["trip-log", requestId],
