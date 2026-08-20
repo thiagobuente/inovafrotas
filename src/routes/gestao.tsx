@@ -343,6 +343,7 @@ function GestaoPage() {
                 vehicles={vehicles ?? []}
                 drivers={drivers ?? []}
                 onDecide={decide}
+                highlight={focusProtocol === r.protocol}
               />
             ))}
           </TabsContent>
