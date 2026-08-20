@@ -394,7 +394,10 @@ function RequestCard({
 
 
   return (
-    <article className="surface-panel p-6">
+    <article
+      id={`req-${request.protocol}`}
+      className={cn("surface-panel p-6 scroll-mt-24", highlight && "ring-2 ring-primary")}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-mono text-xs uppercase text-muted-foreground">{request.protocol}</p>
