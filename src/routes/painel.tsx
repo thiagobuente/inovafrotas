@@ -86,6 +86,11 @@ function PainelPage() {
     },
   });
 
+  useEffect(() => {
+    if (!focusProtocol || !requests?.length) return;
+    const el = document.getElementById(`req-${focusProtocol}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusProtocol, requests]);
 
   async function cancelRequest(request: Record<string, any>) {
     const reason = cancelReason.trim();
