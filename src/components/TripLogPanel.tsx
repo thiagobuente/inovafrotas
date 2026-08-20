@@ -64,6 +64,11 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
         }
       : EMPTY);
 
+  useEffect(() => {
+    if (log?.incidents) setShowIncidents(true);
+  }, [log?.incidents]);
+
+
   const currentPhotos = photos ?? (log?.photo_paths ?? []);
 
   const { data: photoUrls = [] } = useQuery({
