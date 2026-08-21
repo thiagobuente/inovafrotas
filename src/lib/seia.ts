@@ -12,12 +12,14 @@ export type SeiaAuth = {
   session: Session | null;
   user: User | null;
   isManager: boolean;
+  roleLoaded: boolean;
   loading: boolean;
 };
 
 export function useSeiaAuth(): SeiaAuth {
   const [session, setSession] = useState<Session | null>(null);
   const [isManager, setIsManager] = useState(false);
+  const [roleLoaded, setRoleLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,8 +40,10 @@ export function useSeiaAuth(): SeiaAuth {
     const userId = session?.user?.id;
     if (!userId) {
       setIsManager(false);
+      setRoleLoaded(false);
       return;
     }
+    setRoleLoaded(false);
     let active = true;
     supabase
       .from("user_roles")
@@ -48,14 +52,17 @@ export function useSeiaAuth(): SeiaAuth {
       .eq("role", "manager")
       .maybeSingle()
       .then(({ data }) => {
-        if (active) setIsManager(Boolean(data));
+        if (active) {
+          setIsManager(Boolean(data));
+          setRoleLoaded(true);
+        }
       });
     return () => {
       active = false;
     };
   }, [session?.user?.id]);
 
-  return { session, user: session?.user ?? null, isManager, loading };
+  return { session, user: session?.user ?? null, isManager, roleLoaded, loading };
 }
 
 export const STATUS_LABELS: Record<string, string> = {
