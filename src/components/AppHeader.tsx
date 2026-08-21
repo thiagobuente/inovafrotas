@@ -23,6 +23,7 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
           { to: "/gestao", label: "Autorizações" },
           { to: "/agenda", label: "Agenda" },
           { to: "/frota", label: "Frota" },
+          { to: "/diarios", label: "Diários de bordo" },
           { to: "/notificacoes", label: "Notificações" },
           { to: "/configuracoes-email", label: "E-mail" },
           { to: "/usuarios", label: "Senhas" },

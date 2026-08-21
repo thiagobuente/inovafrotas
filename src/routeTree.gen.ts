@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AuditoriaRouteImport } from './routes/auditoria'
 import { Route as ConfiguracoesEmailRouteImport } from './routes/configuracoes-email'
+import { Route as DiariosRouteImport } from './routes/diarios'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as FrotaRouteImport } from './routes/frota'
 import { Route as GestaoRouteImport } from './routes/gestao'
@@ -46,6 +47,11 @@ const AuditoriaRoute = AuditoriaRouteImport.update({
 const ConfiguracoesEmailRoute = ConfiguracoesEmailRouteImport.update({
   id: '/configuracoes-email',
   path: '/configuracoes-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiariosRoute = DiariosRouteImport.update({
+  id: '/diarios',
+  path: '/diarios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EntrarRoute = EntrarRouteImport.update({
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/agenda': typeof AgendaRoute
   '/auditoria': typeof AuditoriaRoute
   '/configuracoes-email': typeof ConfiguracoesEmailRoute
+  '/diarios': typeof DiariosRoute
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/agenda': typeof AgendaRoute
   '/auditoria': typeof AuditoriaRoute
   '/configuracoes-email': typeof ConfiguracoesEmailRoute
+  '/diarios': typeof DiariosRoute
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/agenda': typeof AgendaRoute
   '/auditoria': typeof AuditoriaRoute
   '/configuracoes-email': typeof ConfiguracoesEmailRoute
+  '/diarios': typeof DiariosRoute
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/auditoria'
     | '/configuracoes-email'
+    | '/diarios'
     | '/entrar'
     | '/frota'
     | '/gestao'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/auditoria'
     | '/configuracoes-email'
+    | '/diarios'
     | '/entrar'
     | '/frota'
     | '/gestao'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/auditoria'
     | '/configuracoes-email'
+    | '/diarios'
     | '/entrar'
     | '/frota'
     | '/gestao'
@@ -251,6 +263,7 @@ export interface RootRouteChildren {
   AgendaRoute: typeof AgendaRoute
   AuditoriaRoute: typeof AuditoriaRoute
   ConfiguracoesEmailRoute: typeof ConfiguracoesEmailRoute
+  DiariosRoute: typeof DiariosRoute
   EntrarRoute: typeof EntrarRoute
   FrotaRoute: typeof FrotaRoute
   GestaoRoute: typeof GestaoRoute
@@ -295,6 +308,13 @@ declare module '@tanstack/react-router' {
       path: '/configuracoes-email'
       fullPath: '/configuracoes-email'
       preLoaderRoute: typeof ConfiguracoesEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diarios': {
+      id: '/diarios'
+      path: '/diarios'
+      fullPath: '/diarios'
+      preLoaderRoute: typeof DiariosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/entrar': {
@@ -403,6 +423,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgendaRoute: AgendaRoute,
   AuditoriaRoute: AuditoriaRoute,
   ConfiguracoesEmailRoute: ConfiguracoesEmailRoute,
+  DiariosRoute: DiariosRoute,
   EntrarRoute: EntrarRoute,
   FrotaRoute: FrotaRoute,
   GestaoRoute: GestaoRoute,
