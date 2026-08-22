@@ -57,8 +57,9 @@ function DiariosPage() {
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
-    if (!auth.loading && auth.user && !auth.isManager) navigate({ to: "/painel", replace: true });
-  }, [auth.loading, auth.user, auth.isManager, navigate]);
+    if (!auth.loading && auth.user && auth.roleLoaded && !auth.isManager)
+      navigate({ to: "/painel", replace: true });
+  }, [auth.loading, auth.user, auth.roleLoaded, auth.isManager, navigate]);
 
   const enabled = Boolean(auth.user) && auth.isManager;
 
