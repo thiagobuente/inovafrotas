@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { NotificationBell } from "@/components/NotificationBell";
+import { PwaInstallButton } from "@/components/PwaInstallButton";
 import { cn } from "@/lib/utils";
 import type { SeiaAuth } from "@/lib/seia";
 
