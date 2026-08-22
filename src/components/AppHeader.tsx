@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { NotificationBell } from "@/components/NotificationBell";
+import { PwaInstallButton } from "@/components/PwaInstallButton";
 import { cn } from "@/lib/utils";
 import type { SeiaAuth } from "@/lib/seia";
 
@@ -96,6 +97,7 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
         )}
 
         <div className="ml-auto flex items-center gap-3">
+          <PwaInstallButton className="hidden sm:inline-flex" />
           {auth.user ? (
             <>
               <NotificationBell email={auth.user.email ?? ""} isManager={auth.isManager} />
