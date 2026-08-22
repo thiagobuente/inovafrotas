@@ -85,7 +85,14 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
     },
   });
 
-  async function handleUpload(files: FileList | null) {
+  function kindOf(path: string): "inicio" | "fim" | "outras" {
+    const name = path.split("/").pop() ?? "";
+    if (name.startsWith("inicio-")) return "inicio";
+    if (name.startsWith("fim-")) return "fim";
+    return "outras";
+  }
+
+  async function handleUpload(files: FileList | null, kind: "inicio" | "fim") {
     if (!files?.length) return;
     setUploading(true);
     try {
@@ -97,7 +104,7 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
         if (!file.type.startsWith("image/")) throw new Error("Envie apenas imagens.");
         if (file.size > 5 * 1024 * 1024) throw new Error("Cada foto deve ter até 5 MB.");
         const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-        const path = `${uid}/${requestId}/${crypto.randomUUID()}.${ext}`;
+        const path = `${uid}/${requestId}/${kind}-${crypto.randomUUID()}.${ext}`;
         const { error } = await supabase.storage.from("diario-bordo").upload(path, file);
         if (error) throw error;
         uploaded.push(path);
@@ -114,6 +121,59 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
   function removePhoto(path: string) {
     setPhotos(currentPhotos.filter((p) => p !== path));
   }
+
+  function PhotoField({
+    kind,
+    label,
+    hint,
+  }: {
+    kind: "inicio" | "fim";
+    label: string;
+    hint: string;
+  }) {
+    const items = photoUrls.filter((p) => kindOf(p.path) === kind);
+    return (
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        <Input
+          type="file"
+          accept="image/*"
+          multiple
+          capture="environment"
+          disabled={uploading}
+          onChange={(e) => {
+            void handleUpload(e.target.files, kind);
+            e.target.value = "";
+          }}
+        />
+        <p className="text-xs text-muted-foreground">{uploading ? "Enviando…" : hint}</p>
+        {items.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {items.map((p) => (
+              <div key={p.path} className="relative">
+                <a href={p.url} target="_blank" rel="noreferrer">
+                  <img
+                    src={p.url}
+                    alt={`Foto do diário de bordo (${label})`}
+                    className="h-20 w-20 rounded-md border border-border object-cover"
+                  />
+                </a>
+                <button
+                  type="button"
+                  aria-label="Remover foto"
+                  onClick={() => removePhoto(p.path)}
+                  className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
 
   const save = useMutation({
     mutationFn: async () => {
