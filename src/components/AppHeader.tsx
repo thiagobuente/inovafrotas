@@ -96,6 +96,7 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
         )}
 
         <div className="ml-auto flex items-center gap-3">
+          <PwaInstallButton className="hidden sm:inline-flex" />
           {auth.user ? (
             <>
               <NotificationBell email={auth.user.email ?? ""} isManager={auth.isManager} />
