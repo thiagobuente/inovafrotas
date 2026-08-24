@@ -50,6 +50,24 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_settings: {
+        Row: {
+          cron_token: string
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          cron_token: string
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          cron_token?: string
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
           created_at: string
@@ -202,6 +220,38 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      reminder_dispatches: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          protocol: string
+          request_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          protocol: string
+          request_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          protocol?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_dispatches_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trip_logs: {
         Row: {
