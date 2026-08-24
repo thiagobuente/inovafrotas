@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { registerPwa } from "@/lib/pwa-register";
 
 
 function NotFoundComponent() {
@@ -138,12 +139,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
-    if (!("serviceWorker" in navigator)) return;
-    const register = () => {
-      navigator.serviceWorker.register("/sw.js").catch(() => undefined);
-    };
-    if (document.readyState === "complete") register();
-    else window.addEventListener("load", register, { once: true });
+    registerPwa();
   }, []);
 
   return (
