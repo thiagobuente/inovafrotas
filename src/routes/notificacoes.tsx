@@ -68,6 +68,27 @@ function NotificacoesPage() {
   const [user, setUser] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [running, setRunning] = useState(false);
+  const runReminders = useServerFn(runRemindersNow);
+
+  async function triggerReminders() {
+    setRunning(true);
+    try {
+      const result = await runReminders();
+      const total = result.sent.length;
+      toast.success(
+        total > 0
+          ? `${total} lembrete(s) enviado(s).`
+          : "Nenhum lembrete pendente no momento.",
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Falha ao executar os lembretes.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
