@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { runRemindersNow } from "@/lib/notifications.functions";
 
 const STATUS_LABELS: Record<string, string> = {
   sent: "Enviada",
@@ -30,6 +33,8 @@ const EVENT_LABELS: Record<string, string> = {
   request_cancelled: "Solicitação cancelada",
   request_completed: "Viagem concluída",
   request_status_changed: "Mudança de situação",
+  trip_reminder: "Lembrete de viagem",
+  triplog_pending: "Diário de bordo pendente",
 };
 
 const FILTERS = ["all", "pending", "sent", "failed"] as const;
@@ -120,6 +125,15 @@ function NotificacoesPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Entregas de e-mail geradas a cada mudança de situação das solicitações.
         </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button type="button" size="sm" variant="outline" disabled={running} onClick={triggerReminders}>
+            {running ? "Verificando…" : "Executar lembretes agora"}
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            A verificação automática roda de hora em hora: aviso 24h antes da viagem e cobrança do
+            diário de bordo após o retorno.
+          </span>
+        </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <SummaryCard label="Pendentes" value={counts.pending} />
