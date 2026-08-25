@@ -1,6 +1,9 @@
 import type { NotificationEvent, NotificationMessage } from "./types";
 import { MANAGER_EMAIL } from "./types";
 
+// O servidor roda em UTC; as datas exibidas devem seguir o horário de Brasília.
+const BRAZIL_TZ = "America/Sao_Paulo";
+
 const STATUS_PT: Record<string, string> = {
   pending: "Aguardando autorização",
   approved: "Autorizada",
@@ -15,6 +18,7 @@ function fmt(value?: string | null) {
   return Number.isNaN(d.getTime())
     ? value
     : d.toLocaleString("pt-BR", {
+        timeZone: BRAZIL_TZ,
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
