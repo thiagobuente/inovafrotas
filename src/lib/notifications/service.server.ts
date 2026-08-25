@@ -92,8 +92,8 @@ export class NotificationService {
       to,
       audience: "manager",
       subject: "[SEIA] E-mail de teste de configuração",
-      text: `Este é um e-mail de teste do SEIA.\n\nProvedor: ${provider.name}\nRemetente: ${config.fromName} <${config.fromEmail}>\nEnviado em: ${new Date().toLocaleString("pt-BR")}\n\nSe você recebeu esta mensagem, o envio de notificações está funcionando.`,
-      html: `<div style="font-family:Arial,sans-serif;line-height:1.6"><h2>E-mail de teste do SEIA</h2><p>Se você recebeu esta mensagem, o envio de notificações está funcionando.</p><ul><li><strong>Provedor:</strong> ${provider.name}</li><li><strong>Remetente:</strong> ${config.fromName} &lt;${config.fromEmail}&gt;</li><li><strong>Enviado em:</strong> ${new Date().toLocaleString("pt-BR")}</li></ul></div>`,
+      text: `Este é um e-mail de teste do SEIA.\n\nProvedor: ${provider.name}\nRemetente: ${config.fromName} <${config.fromEmail}>\nEnviado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\nSe você recebeu esta mensagem, o envio de notificações está funcionando.`,
+      html: `<div style="font-family:Arial,sans-serif;line-height:1.6"><h2>E-mail de teste do SEIA</h2><p>Se você recebeu esta mensagem, o envio de notificações está funcionando.</p><ul><li><strong>Provedor:</strong> ${provider.name}</li><li><strong>Remetente:</strong> ${config.fromName} &lt;${config.fromEmail}&gt;</li><li><strong>Enviado em:</strong> ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</li></ul></div>`,
     };
     let result: DeliveryResult;
     try {
