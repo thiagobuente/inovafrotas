@@ -56,3 +56,18 @@ export const sendNotification = createServerFn({ method: "POST" })
     const results = await notificationService.notify(event);
     return { results };
   });
+
+/** Executa a rotina de lembretes sob demanda (somente gestor). */
+export const runRemindersNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isManager, error } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "manager",
+    });
+    if (error || !isManager) {
+      throw new Error("Apenas o gestor de frota pode executar os lembretes.");
+    }
+    const { runReminders } = await import("@/lib/notifications/reminders.server");
+    return runReminders();
+  });

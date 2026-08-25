@@ -43,6 +43,10 @@ function headline(event: NotificationEvent): string {
       return "Solicitação cancelada";
     case "request_completed":
       return "Viagem concluída";
+    case "trip_reminder":
+      return "Lembrete: viagem nas próximas 24 horas";
+    case "triplog_pending":
+      return "Diário de bordo pendente";
     default:
       return "Atualização de solicitação";
   }

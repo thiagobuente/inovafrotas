@@ -8,7 +8,9 @@ export type NotificationEventType =
   | "request_rejected"
   | "request_cancelled"
   | "request_completed"
-  | "request_status_changed";
+  | "request_status_changed"
+  | "trip_reminder"
+  | "triplog_pending";
 
 export type NotificationAudience = "requester" | "manager";
 
