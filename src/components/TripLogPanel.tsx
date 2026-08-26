@@ -27,8 +27,17 @@ const EMPTY: Form = {
 function toLocalInput(value: string | null) {
   if (!value) return "";
   const d = new Date(value);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (Number.isNaN(d.getTime())) return "";
+  // Sempre exibe/edita em horário de Brasília, independente do fuso do aparelho.
+  const parts = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+  return parts.replace(" ", "T").slice(0, 16);
 }
 
 export function TripLogPanel({ requestId }: { requestId: string }) {
@@ -179,9 +188,9 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
     mutationFn: async () => {
       const payload = {
         request_id: requestId,
-        departure_at: current.departure_at ? new Date(current.departure_at).toISOString() : null,
+        departure_at: current.departure_at ? brasiliaInputToISO(current.departure_at) : null,
         departure_km: current.departure_km ? Number(current.departure_km) : null,
-        return_at: current.return_at ? new Date(current.return_at).toISOString() : null,
+        return_at: current.return_at ? brasiliaInputToISO(current.return_at) : null,
         return_km: current.return_km ? Number(current.return_km) : null,
         incidents: current.incidents.trim() || null,
         photo_paths: currentPhotos,
