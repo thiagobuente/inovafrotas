@@ -244,6 +244,60 @@ function SolicitarPage() {
           </div>
         </form>
       </main>
+
+      <Dialog open={Boolean(confirmation)} onOpenChange={(open) => !open && setConfirmation(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <CheckCircle2 className="size-8" />
+            </div>
+            <DialogTitle className="mt-3 text-center text-xl">Solicitação enviada!</DialogTitle>
+            <DialogDescription className="text-center text-base">
+              Registramos seu pedido e o gestor de frota já foi avisado. Você receberá a resposta por
+              e-mail e no mural de avisos.
+            </DialogDescription>
+          </DialogHeader>
+
+          {confirmation && (
+            <dl className="mt-2 space-y-2 rounded-lg border border-border bg-muted/40 p-4 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Protocolo</dt>
+                <dd className="font-semibold">{confirmation.protocol}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Destino</dt>
+                <dd className="text-right font-medium">{confirmation.destination}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Saída</dt>
+                <dd className="font-medium">{formatDateTime(confirmation.pickupAt)}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Retorno</dt>
+                <dd className="font-medium">{formatDateTime(confirmation.returnAt)}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Situação</dt>
+                <dd className="font-medium text-amber-600">Aguardando autorização</dd>
+              </div>
+            </dl>
+          )}
+
+          <DialogFooter className="mt-2 sm:justify-center">
+            <Button
+              onClick={() => {
+                setConfirmation(null);
+                navigate({ to: "/painel" });
+              }}
+            >
+              Ver minhas solicitações
+            </Button>
+            <Button variant="outline" onClick={() => setConfirmation(null)}>
+              Nova solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
