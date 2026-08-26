@@ -7,7 +7,6 @@ const STORAGE_KEY = "seia-theme";
 
 function applyTheme(theme: "light" | "dark") {
   document.documentElement.classList.toggle("dark", theme === "dark");
-  document.documentElement.style.colorScheme = theme;
 }
 
 export function ThemeToggle({ className }: { className?: string }) {
