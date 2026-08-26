@@ -12,6 +12,16 @@ import { Switch } from "@/components/ui/switch";
 import { AppHeader } from "@/components/AppHeader";
 import { useSeiaAuth, isInstitutionalEmail, EMAIL_DOMAIN } from "@/lib/seia";
 import { sendNotification } from "@/lib/notifications.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { CheckCircle2 } from "lucide-react";
+import { formatDateTime } from "@/lib/seia";
 
 export const Route = createFileRoute("/solicitar")({
   head: () => ({
@@ -40,6 +50,12 @@ function SolicitarPage() {
   const [busy, setBusy] = useState(false);
   const [needsDriver, setNeedsDriver] = useState(false);
   const [externalDriver, setExternalDriver] = useState("");
+  const [confirmation, setConfirmation] = useState<{
+    protocol: string;
+    destination: string;
+    pickupAt: string;
+    returnAt: string;
+  } | null>(null);
   const notify = useServerFn(sendNotification);
 
   useEffect(() => {
@@ -69,7 +85,8 @@ function SolicitarPage() {
       toast.error(`Apenas contas ${EMAIL_DOMAIN} podem solicitar veículos.`);
       return;
     }
-    const form = new FormData(e.currentTarget);
+    const formEl = e.currentTarget;
+    const form = new FormData(formEl);
     const pickup = String(form.get("pickup_at"));
     const ret = String(form.get("return_at"));
     if (new Date(ret) <= new Date(pickup)) {
@@ -101,34 +118,42 @@ function SolicitarPage() {
       toast.error("Não foi possível registrar: " + error.message);
       return;
     }
-    if (created) {
-      try {
-        const { results } = await notify({
-          data: {
-            type: "request_created",
-            protocol: created.protocol,
-            requesterEmail: created.requester_email,
-            destination: created.destination,
-            agenda: created.agenda,
-            pickupAt: created.pickup_at,
-            returnAt: created.return_at,
-            status: "pending",
-          },
-        });
+    if (!created) return;
+
+    // Mostra a confirmação na hora; o e-mail ao gestor segue em segundo plano.
+    setConfirmation({
+      protocol: created.protocol,
+      destination: created.destination,
+      pickupAt: created.pickup_at,
+      returnAt: created.return_at,
+    });
+    formEl.reset();
+    setNeedsDriver(false);
+    setExternalDriver("");
+
+    void notify({
+      data: {
+        type: "request_created",
+        protocol: created.protocol,
+        requesterEmail: created.requester_email,
+        destination: created.destination,
+        agenda: created.agenda,
+        pickupAt: created.pickup_at,
+        returnAt: created.return_at,
+        status: "pending",
+      },
+    })
+      .then(({ results }) => {
         const manager = results.find((r) => r.audience === "manager");
         if (manager && manager.status !== "sent") {
           toast.warning(
-            "Solicitação registrada, mas o e-mail ao gestor não foi entregue. Ele receberá o aviso no mural do sistema.",
+            "O e-mail ao gestor não foi entregue, mas ele já recebeu o aviso no mural do sistema.",
           );
         }
-      } catch {
-        toast.warning(
-          "Solicitação registrada, mas não foi possível notificar o gestor por e-mail agora.",
-        );
-      }
-    }
-    toast.success("Solicitação enviada para autorização do gestor.");
-    navigate({ to: "/painel" });
+      })
+      .catch(() => {
+        toast.warning("Não foi possível notificar o gestor por e-mail agora; o aviso ficou no mural.");
+      });
   }
 
   return (
@@ -219,6 +244,60 @@ function SolicitarPage() {
           </div>
         </form>
       </main>
+
+      <Dialog open={Boolean(confirmation)} onOpenChange={(open) => !open && setConfirmation(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <CheckCircle2 className="size-8" />
+            </div>
+            <DialogTitle className="mt-3 text-center text-xl">Solicitação enviada!</DialogTitle>
+            <DialogDescription className="text-center text-base">
+              Registramos seu pedido e o gestor de frota já foi avisado. Você receberá a resposta por
+              e-mail e no mural de avisos.
+            </DialogDescription>
+          </DialogHeader>
+
+          {confirmation && (
+            <dl className="mt-2 space-y-2 rounded-lg border border-border bg-muted/40 p-4 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Protocolo</dt>
+                <dd className="font-semibold">{confirmation.protocol}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Destino</dt>
+                <dd className="text-right font-medium">{confirmation.destination}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Saída</dt>
+                <dd className="font-medium">{formatDateTime(confirmation.pickupAt)}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Retorno</dt>
+                <dd className="font-medium">{formatDateTime(confirmation.returnAt)}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Situação</dt>
+                <dd className="font-medium text-amber-600">Aguardando autorização</dd>
+              </div>
+            </dl>
+          )}
+
+          <DialogFooter className="mt-2 sm:justify-center">
+            <Button
+              onClick={() => {
+                setConfirmation(null);
+                navigate({ to: "/painel" });
+              }}
+            >
+              Ver minhas solicitações
+            </Button>
+            <Button variant="outline" onClick={() => setConfirmation(null)}>
+              Nova solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
