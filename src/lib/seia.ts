@@ -92,3 +92,14 @@ export function formatDateTime(value: string | null | undefined) {
     minute: "2-digit",
   });
 }
+
+/**
+ * Converte um valor de <input type="datetime-local"> ("2026-08-26T10:00")
+ * em ISO, interpretando-o SEMPRE como horário de Brasília (UTC-3),
+ * independente do fuso do dispositivo/navegador.
+ */
+export function brasiliaInputToISO(value: string) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value.trim());
+  if (!m) return new Date(value).toISOString();
+  return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:00-03:00`).toISOString();
+}
