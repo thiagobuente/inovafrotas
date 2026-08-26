@@ -12,6 +12,16 @@ import { Switch } from "@/components/ui/switch";
 import { AppHeader } from "@/components/AppHeader";
 import { useSeiaAuth, isInstitutionalEmail, EMAIL_DOMAIN } from "@/lib/seia";
 import { sendNotification } from "@/lib/notifications.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { CheckCircle2 } from "lucide-react";
+import { formatDateTime } from "@/lib/seia";
 
 export const Route = createFileRoute("/solicitar")({
   head: () => ({
@@ -40,6 +50,12 @@ function SolicitarPage() {
   const [busy, setBusy] = useState(false);
   const [needsDriver, setNeedsDriver] = useState(false);
   const [externalDriver, setExternalDriver] = useState("");
+  const [confirmation, setConfirmation] = useState<{
+    protocol: string;
+    destination: string;
+    pickupAt: string;
+    returnAt: string;
+  } | null>(null);
   const notify = useServerFn(sendNotification);
 
   useEffect(() => {
@@ -101,34 +117,42 @@ function SolicitarPage() {
       toast.error("Não foi possível registrar: " + error.message);
       return;
     }
-    if (created) {
-      try {
-        const { results } = await notify({
-          data: {
-            type: "request_created",
-            protocol: created.protocol,
-            requesterEmail: created.requester_email,
-            destination: created.destination,
-            agenda: created.agenda,
-            pickupAt: created.pickup_at,
-            returnAt: created.return_at,
-            status: "pending",
-          },
-        });
+    if (!created) return;
+
+    // Mostra a confirmação na hora; o e-mail ao gestor segue em segundo plano.
+    setConfirmation({
+      protocol: created.protocol,
+      destination: created.destination,
+      pickupAt: created.pickup_at,
+      returnAt: created.return_at,
+    });
+    e.currentTarget.reset?.();
+    setNeedsDriver(false);
+    setExternalDriver("");
+
+    void notify({
+      data: {
+        type: "request_created",
+        protocol: created.protocol,
+        requesterEmail: created.requester_email,
+        destination: created.destination,
+        agenda: created.agenda,
+        pickupAt: created.pickup_at,
+        returnAt: created.return_at,
+        status: "pending",
+      },
+    })
+      .then(({ results }) => {
         const manager = results.find((r) => r.audience === "manager");
         if (manager && manager.status !== "sent") {
           toast.warning(
-            "Solicitação registrada, mas o e-mail ao gestor não foi entregue. Ele receberá o aviso no mural do sistema.",
+            "O e-mail ao gestor não foi entregue, mas ele já recebeu o aviso no mural do sistema.",
           );
         }
-      } catch {
-        toast.warning(
-          "Solicitação registrada, mas não foi possível notificar o gestor por e-mail agora.",
-        );
-      }
-    }
-    toast.success("Solicitação enviada para autorização do gestor.");
-    navigate({ to: "/painel" });
+      })
+      .catch(() => {
+        toast.warning("Não foi possível notificar o gestor por e-mail agora; o aviso ficou no mural.");
+      });
   }
 
   return (
