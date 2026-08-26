@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CheckCircle2 } from "lucide-react";
-import { formatDateTime } from "@/lib/seia";
+import { formatDateTime, brasiliaInputToISO } from "@/lib/seia";
 
 export const Route = createFileRoute("/solicitar")({
   head: () => ({
@@ -103,8 +103,8 @@ function SolicitarPage() {
       requester_email: user.email.toLowerCase(),
       agenda: String(form.get("agenda")).trim(),
       destination: String(form.get("destination")).trim(),
-      pickup_at: new Date(pickup).toISOString(),
-      return_at: new Date(ret).toISOString(),
+      pickup_at: brasiliaInputToISO(pickup),
+      return_at: brasiliaInputToISO(ret),
       passengers_count: Number(form.get("passengers_count") || 1),
       needs_driver: needsDriver,
       external_driver_name: externalDriverName,
