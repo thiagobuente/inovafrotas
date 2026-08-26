@@ -85,7 +85,8 @@ function SolicitarPage() {
       toast.error(`Apenas contas ${EMAIL_DOMAIN} podem solicitar veículos.`);
       return;
     }
-    const form = new FormData(e.currentTarget);
+    const formEl = e.currentTarget;
+    const form = new FormData(formEl);
     const pickup = String(form.get("pickup_at"));
     const ret = String(form.get("return_at"));
     if (new Date(ret) <= new Date(pickup)) {
@@ -126,7 +127,7 @@ function SolicitarPage() {
       pickupAt: created.pickup_at,
       returnAt: created.return_at,
     });
-    e.currentTarget.reset?.();
+    formEl.reset();
     setNeedsDriver(false);
     setExternalDriver("");
 
