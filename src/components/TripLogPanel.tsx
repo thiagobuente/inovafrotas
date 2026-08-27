@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageSquarePlus, X } from "lucide-react";
 import { brasiliaInputToISO } from "@/lib/seia";
+import { useServerFn } from "@tanstack/react-start";
+import { emailTripLog } from "@/lib/triplog.functions";
 
 type Form = {
   departure_at: string;
@@ -48,6 +50,7 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
   const [photos, setPhotos] = useState<string[] | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showIncidents, setShowIncidents] = useState(false);
+  const sendTripLogEmail = useServerFn(emailTripLog);
 
   const { data: log, isLoading } = useQuery({
     queryKey: ["trip-log", requestId],
@@ -209,10 +212,24 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Diário de bordo registrado.");
+      toast.success("Diário de bordo registrado. Enviando cópia por e-mail ao gestor…");
       setForm(null);
       setPhotos(null);
       queryClient.invalidateQueries({ queryKey: ["trip-log", requestId] });
+      void sendTripLogEmail({ data: { requestId } })
+        .then((r) => {
+          const sent = r.results.some((x) => x.status === "sent");
+          if (sent) {
+            toast.success(
+              `Cópia enviada ao gestor com ${r.attached} foto(s) em anexo.`,
+            );
+          } else {
+            toast.warning(
+              "Diário salvo, mas o e-mail não pôde ser enviado. O gestor foi avisado dentro do sistema.",
+            );
+          }
+        })
+        .catch((e: Error) => toast.warning(`Diário salvo. E-mail não enviado: ${e.message}`));
     },
     onError: (e: Error) => toast.error(e.message),
   });
