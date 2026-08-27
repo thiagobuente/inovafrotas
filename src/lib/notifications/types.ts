@@ -29,12 +29,20 @@ export type NotificationEvent = {
   status?: string | null;
 };
 
+export type EmailAttachment = {
+  filename: string;
+  contentType: string;
+  /** Conteúdo do arquivo em base64 (sem prefixo data:). */
+  contentBase64: string;
+};
+
 export type NotificationMessage = {
   to: string;
   audience: NotificationAudience;
   subject: string;
   text: string;
   html: string;
+  attachments?: EmailAttachment[];
 };
 
 export type DeliveryStatus = "sent" | "pending" | "failed" | "skipped";
