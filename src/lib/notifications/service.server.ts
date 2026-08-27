@@ -47,7 +47,10 @@ export class NotificationService {
   }
 
   /** Envio avulso de uma mensagem já montada (ex.: redefinição de senha). */
-  async sendCustom(message: NotificationMessage): Promise<DeliveryResult> {
+  async sendCustom(
+    message: NotificationMessage,
+    meta?: { eventType?: string; protocol?: string },
+  ): Promise<DeliveryResult> {
     const config = await loadEmailSettings();
     const provider = resolveProvider(config);
     let result: DeliveryResult;
@@ -68,8 +71,8 @@ export class NotificationService {
       `[notificacao:avulso] ${message.to} status=${result.status} provedor=${result.provider}${result.reason ? ` motivo=${result.reason}` : ""}`,
     );
     await this.log({
-      event_type: "password_reset",
-      protocol: "SENHA",
+      event_type: meta?.eventType ?? "password_reset",
+      protocol: meta?.protocol ?? "SENHA",
       requester_email: message.to,
       recipient: message.to,
       audience: message.audience,
