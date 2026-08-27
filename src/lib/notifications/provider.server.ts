@@ -1,5 +1,6 @@
 import type {
   DeliveryResult,
+  EmailAttachment,
   EmailSettings,
   NotificationMessage,
   NotificationProvider,
@@ -75,6 +76,14 @@ class BrevoEmailProvider implements NotificationProvider {
           subject: message.subject,
           htmlContent: message.html,
           textContent: message.text,
+          ...(message.attachments?.length
+            ? {
+                attachment: message.attachments.map((a) => ({
+                  name: a.filename,
+                  content: a.contentBase64,
+                })),
+              }
+            : {}),
         }),
       });
       const body = await response.text();
@@ -150,6 +159,14 @@ class ResendEmailProvider implements NotificationProvider {
           subject: message.subject,
           html: message.html,
           text: message.text,
+          ...(message.attachments?.length
+            ? {
+                attachments: message.attachments.map((a) => ({
+                  filename: a.filename,
+                  content: a.contentBase64,
+                })),
+              }
+            : {}),
         }),
       });
       const body = await response.text();
@@ -288,6 +305,7 @@ class GmailEmailProvider implements NotificationProvider {
       subject: message.subject,
       text: message.text,
       html: message.html,
+      attachments: message.attachments,
     });
 
     try {
@@ -362,6 +380,10 @@ function toBase64Body(value: string) {
   return (Buffer.from(value, "utf8").toString("base64").match(/.{1,76}/g) ?? []).join("\r\n");
 }
 
+function wrapBase64(value: string) {
+  return (value.match(/.{1,76}/g) ?? []).join("\r\n");
+}
+
 function createRawEmail(options: {
   from: string;
   to: string;
@@ -369,18 +391,30 @@ function createRawEmail(options: {
   subject: string;
   text: string;
   html: string;
+  attachments?: EmailAttachment[];
 }) {
   const boundary = `----=_Part_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+  const mixed = `----=_Mix_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+  const hasFiles = Boolean(options.attachments?.length);
   const lines = [
     `From: ${encodeAddressHeader(options.from)}`,
     `To: ${encodeAddressHeader(options.to)}`,
     `Subject: ${encodeHeaderText(options.subject)}`,
   ];
   if (options.replyTo) lines.push(`Reply-To: ${encodeAddressHeader(options.replyTo)}`);
+  lines.push("MIME-Version: 1.0");
+  if (hasFiles) {
+    lines.push(
+      `Content-Type: multipart/mixed; boundary="${mixed}"`,
+      "",
+      `--${mixed}`,
+      `Content-Type: multipart/alternative; boundary="${boundary}"`,
+      "",
+    );
+  } else {
+    lines.push(`Content-Type: multipart/alternative; boundary="${boundary}"`, "");
+  }
   lines.push(
-    "MIME-Version: 1.0",
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    "",
     `--${boundary}`,
     'Content-Type: text/plain; charset="UTF-8"',
     "Content-Transfer-Encoding: base64",
@@ -393,6 +427,19 @@ function createRawEmail(options: {
     toBase64Body(options.html),
     `--${boundary}--`,
   );
+  if (hasFiles) {
+    for (const file of options.attachments ?? []) {
+      lines.push(
+        `--${mixed}`,
+        `Content-Type: ${file.contentType}; name="${file.filename}"`,
+        "Content-Transfer-Encoding: base64",
+        `Content-Disposition: attachment; filename="${file.filename}"`,
+        "",
+        wrapBase64(file.contentBase64),
+      );
+    }
+    lines.push(`--${mixed}--`);
+  }
   const rfc2822 = lines.join("\r\n");
   // base64url já remove '+' e '/' e o padding '='.
   return Buffer.from(rfc2822, "utf8").toString("base64url");
