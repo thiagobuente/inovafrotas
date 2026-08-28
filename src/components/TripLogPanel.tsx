@@ -176,14 +176,16 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
                     className="h-20 w-20 rounded-md border border-border object-cover"
                   />
                 </a>
-                <button
+                <Button
                   type="button"
+                  variant="destructive"
+                  size="icon"
                   aria-label="Remover foto"
                   onClick={() => removePhoto(p.path)}
-                  className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                  className="absolute -right-2 -top-2 size-6 rounded-full"
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </Button>
               </div>
             ))}
             {pendingItems.map((photo) => (
@@ -244,22 +246,22 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
         }
 
         const allPhotoPaths = [...currentPhotos, ...uploadedPaths];
-      const payload = {
-        request_id: requestId,
-        departure_at: current.departure_at ? brasiliaInputToISO(current.departure_at) : null,
-        departure_km: current.departure_km ? Number(current.departure_km) : null,
-        return_at: current.return_at ? brasiliaInputToISO(current.return_at) : null,
-        return_km: current.return_km ? Number(current.return_km) : null,
-        incidents: current.incidents.trim() || null,
+        const payload = {
+          request_id: requestId,
+          departure_at: current.departure_at ? brasiliaInputToISO(current.departure_at) : null,
+          departure_km: current.departure_km ? Number(current.departure_km) : null,
+          return_at: current.return_at ? brasiliaInputToISO(current.return_at) : null,
+          return_km: current.return_km ? Number(current.return_km) : null,
+          incidents: current.incidents.trim() || null,
           photo_paths: allPhotoPaths,
-      };
-      if (
-        payload.departure_km !== null &&
-        payload.return_km !== null &&
-        payload.return_km < payload.departure_km
-      ) {
-        throw new Error("A quilometragem de retorno não pode ser menor que a de saída.");
-      }
+        };
+        if (
+          payload.departure_km !== null &&
+          payload.return_km !== null &&
+          payload.return_km < payload.departure_km
+        ) {
+          throw new Error("A quilometragem de retorno não pode ser menor que a de saída.");
+        }
         const { error } = log
           ? await supabase.from("trip_logs").update(payload).eq("id", log.id)
           : await supabase.from("trip_logs").insert(payload);
@@ -443,14 +445,16 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
                           className="h-20 w-20 rounded-md border border-border object-cover"
                         />
                       </a>
-                      <button
+                      <Button
                         type="button"
+                        variant="destructive"
+                        size="icon"
                         aria-label="Remover foto"
                         onClick={() => removePhoto(p.path)}
-                        className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                        className="absolute -right-2 -top-2 size-6 rounded-full"
                       >
                         <X className="h-3 w-3" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
               </div>
