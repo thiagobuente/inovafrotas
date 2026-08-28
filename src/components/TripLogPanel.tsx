@@ -19,6 +19,12 @@ type Form = {
   incidents: string;
 };
 
+type PendingPhoto = {
+  id: string;
+  file: File;
+  kind: "inicio" | "fim";
+};
+
 const EMPTY: Form = {
   departure_at: "",
   departure_km: "",
@@ -48,6 +54,7 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form | null>(null);
   const [photos, setPhotos] = useState<string[] | null>(null);
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
   const [showIncidents, setShowIncidents] = useState(false);
   const sendTripLogEmail = useServerFn(emailTripLog);
@@ -105,34 +112,29 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
     return "outras";
   }
 
-  async function handleUpload(files: FileList | null, kind: "inicio" | "fim") {
+  function handlePhotoSelection(files: FileList | null, kind: "inicio" | "fim") {
     if (!files?.length) return;
-    setUploading(true);
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      const uid = auth.user?.id;
-      if (!uid) throw new Error("Sessão expirada. Entre novamente.");
-      const uploaded: string[] = [];
-      for (const file of Array.from(files)) {
+      const selected = Array.from(files).map((file) => {
         if (!file.type.startsWith("image/")) throw new Error("Envie apenas imagens.");
         if (file.size > 5 * 1024 * 1024) throw new Error("Cada foto deve ter até 5 MB.");
-        const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-        const path = `${uid}/${requestId}/${kind}-${crypto.randomUUID()}.${ext}`;
-        const { error } = await supabase.storage.from("diario-bordo").upload(path, file);
-        if (error) throw error;
-        uploaded.push(path);
-      }
-      setPhotos([...currentPhotos, ...uploaded]);
-      toast.success("Foto(s) anexada(s). Salve o diário para confirmar.");
+        return { id: crypto.randomUUID(), file, kind } satisfies PendingPhoto;
+      });
+      setPendingPhotos((current) => [...current, ...selected]);
+      toast.success(
+        `${selected.length} foto(s) selecionada(s). Elas serão enviadas ao salvar o diário.`,
+      );
     } catch (e) {
       toast.error((e as Error).message);
-    } finally {
-      setUploading(false);
     }
   }
 
   function removePhoto(path: string) {
     setPhotos(currentPhotos.filter((p) => p !== path));
+  }
+
+  function removePendingPhoto(id: string) {
+    setPendingPhotos((current) => current.filter((photo) => photo.id !== id));
   }
 
   function PhotoField({
@@ -145,6 +147,7 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
     hint: string;
   }) {
     const items = photoUrls.filter((p) => kindOf(p.path) === kind);
+    const pendingItems = pendingPhotos.filter((photo) => photo.kind === kind);
     return (
       <div className="space-y-2">
         <Label>{label}</Label>
@@ -155,12 +158,14 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
           capture="environment"
           disabled={uploading}
           onChange={(e) => {
-            void handleUpload(e.target.files, kind);
+            handlePhotoSelection(e.target.files, kind);
             e.target.value = "";
           }}
         />
-        <p className="text-xs text-muted-foreground">{uploading ? "Enviando…" : hint}</p>
-        {items.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {uploading ? "Enviando fotos…" : hint}
+        </p>
+        {(items.length > 0 || pendingItems.length > 0) && (
           <div className="flex flex-wrap gap-2 pt-1">
             {items.map((p) => (
               <div key={p.path} className="relative">
@@ -171,14 +176,36 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
                     className="h-20 w-20 rounded-md border border-border object-cover"
                   />
                 </a>
-                <button
+                <Button
                   type="button"
+                  variant="destructive"
+                  size="icon"
                   aria-label="Remover foto"
                   onClick={() => removePhoto(p.path)}
-                  className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                  className="absolute -right-2 -top-2 size-6 rounded-full"
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </Button>
+              </div>
+            ))}
+            {pendingItems.map((photo) => (
+              <div
+                key={photo.id}
+                className="flex max-w-48 items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2"
+              >
+                <span className="truncate text-xs" title={photo.file.name}>
+                  {photo.file.name}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Remover ${photo.file.name}`}
+                  onClick={() => removePendingPhoto(photo.id)}
+                  className="size-6 shrink-0 text-destructive"
+                >
+                  <X className="size-3" />
+                </Button>
               </div>
             ))}
           </div>
@@ -190,31 +217,72 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
 
   const save = useMutation({
     mutationFn: async () => {
-      const payload = {
-        request_id: requestId,
-        departure_at: current.departure_at ? brasiliaInputToISO(current.departure_at) : null,
-        departure_km: current.departure_km ? Number(current.departure_km) : null,
-        return_at: current.return_at ? brasiliaInputToISO(current.return_at) : null,
-        return_km: current.return_km ? Number(current.return_km) : null,
-        incidents: current.incidents.trim() || null,
-        photo_paths: currentPhotos,
-      };
-      if (
-        payload.departure_km !== null &&
-        payload.return_km !== null &&
-        payload.return_km < payload.departure_km
-      ) {
-        throw new Error("A quilometragem de retorno não pode ser menor que a de saída.");
+      setUploading(true);
+      const uploadedPaths: string[] = [];
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) {
+        setUploading(false);
+        throw new Error("Sessão expirada. Entre novamente.");
       }
-      const { error } = log
-        ? await supabase.from("trip_logs").update(payload).eq("id", log.id)
-        : await supabase.from("trip_logs").insert(payload);
-      if (error) throw error;
+
+      try {
+        for (const photo of pendingPhotos) {
+          const extensionByType: Record<string, string> = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+            "image/gif": "gif",
+            "image/heic": "heic",
+            "image/heif": "heic",
+          };
+          const ext = extensionByType[photo.file.type] ?? "jpg";
+          const path = `${uid}/${requestId}/${photo.kind}-${crypto.randomUUID()}.${ext}`;
+          const { error } = await supabase.storage
+            .from("diario-bordo")
+            .upload(path, photo.file, { contentType: photo.file.type, upsert: false });
+          if (error) throw new Error(`Falha ao enviar ${photo.file.name}: ${error.message}`);
+          uploadedPaths.push(path);
+        }
+
+        const allPhotoPaths = [...currentPhotos, ...uploadedPaths];
+        const payload = {
+          request_id: requestId,
+          departure_at: current.departure_at ? brasiliaInputToISO(current.departure_at) : null,
+          departure_km: current.departure_km ? Number(current.departure_km) : null,
+          return_at: current.return_at ? brasiliaInputToISO(current.return_at) : null,
+          return_km: current.return_km ? Number(current.return_km) : null,
+          incidents: current.incidents.trim() || null,
+          photo_paths: allPhotoPaths,
+        };
+        if (
+          payload.departure_km !== null &&
+          payload.return_km !== null &&
+          payload.return_km < payload.departure_km
+        ) {
+          throw new Error("A quilometragem de retorno não pode ser menor que a de saída.");
+        }
+        const { error } = log
+          ? await supabase.from("trip_logs").update(payload).eq("id", log.id)
+          : await supabase.from("trip_logs").insert(payload);
+        if (error) throw error;
+        return { photoCount: allPhotoPaths.length };
+      } catch (error) {
+        if (uploadedPaths.length > 0) {
+          await supabase.storage.from("diario-bordo").remove(uploadedPaths);
+        }
+        throw error;
+      } finally {
+        setUploading(false);
+      }
     },
-    onSuccess: () => {
-      toast.success("Diário de bordo registrado. Enviando cópia por e-mail ao gestor…");
+    onSuccess: ({ photoCount }) => {
+      toast.success(
+        `Diário registrado com ${photoCount} foto(s). Enviando cópia por e-mail ao gestor…`,
+      );
       setForm(null);
       setPhotos(null);
+      setPendingPhotos([]);
       queryClient.invalidateQueries({ queryKey: ["trip-log", requestId] });
       void sendTripLogEmail({ data: { requestId } })
         .then((r) => {
@@ -377,22 +445,32 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
                           className="h-20 w-20 rounded-md border border-border object-cover"
                         />
                       </a>
-                      <button
+                      <Button
                         type="button"
+                        variant="destructive"
+                        size="icon"
                         aria-label="Remover foto"
                         onClick={() => removePhoto(p.path)}
-                        className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                        className="absolute -right-2 -top-2 size-6 rounded-full"
                       >
                         <X className="h-3 w-3" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
               </div>
             </div>
           )}
           <div>
-            <Button size="sm" disabled={save.isPending} onClick={() => save.mutate()}>
-              {save.isPending ? "Salvando…" : "Salvar diário"}
+            <Button
+              size="sm"
+              disabled={save.isPending || uploading}
+              onClick={() => save.mutate()}
+            >
+              {uploading
+                ? `Enviando ${pendingPhotos.length} foto(s)…`
+                : save.isPending
+                  ? "Salvando…"
+                  : `Salvar diário${pendingPhotos.length ? ` com ${pendingPhotos.length} foto(s)` : ""}`}
             </Button>
           </div>
         </div>
