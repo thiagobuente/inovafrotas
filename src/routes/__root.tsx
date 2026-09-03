@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { registerPwa } from "@/lib/pwa-register";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { useSeiaAuth } from "@/lib/seia";
 
 
 function NotFoundComponent() {
@@ -144,6 +146,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const auth = useSeiaAuth();
 
   useEffect(() => {
     registerPwa();
@@ -153,7 +156,12 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-      <Toaster richColors position="top-right" />
+      <MobileBottomNav auth={auth} />
+      <Toaster
+        richColors
+        position="top-center"
+        style={{ top: "calc(0.5rem + env(safe-area-inset-top, 0px))" }}
+      />
     </QueryClientProvider>
 
   );

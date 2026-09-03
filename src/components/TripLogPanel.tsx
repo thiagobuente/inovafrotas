@@ -148,15 +148,25 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
   }) {
     const items = photoUrls.filter((p) => kindOf(p.path) === kind);
     const pendingItems = pendingPhotos.filter((photo) => photo.kind === kind);
+    const inputId = `photo-${kind}`;
     return (
       <div className="space-y-2">
-        <Label>{label}</Label>
-        <Input
+        <Label htmlFor={inputId}>{label}</Label>
+        <label
+          htmlFor={inputId}
+          className="flex min-h-[3rem] cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted active:bg-muted/80"
+        >
+          <span className="text-base">📷</span>
+          <span>Tirar foto ou escolher da galeria</span>
+        </label>
+        <input
+          id={inputId}
           type="file"
           accept="image/*"
           multiple
           capture="environment"
           disabled={uploading}
+          className="sr-only"
           onChange={(e) => {
             handlePhotoSelection(e.target.files, kind);
             e.target.value = "";
@@ -166,14 +176,14 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
           {uploading ? "Enviando fotos…" : hint}
         </p>
         {(items.length > 0 || pendingItems.length > 0) && (
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="flex flex-wrap gap-3 pt-1">
             {items.map((p) => (
               <div key={p.path} className="relative">
                 <a href={p.url} target="_blank" rel="noreferrer">
                   <img
                     src={p.url}
                     alt={`Foto do diário de bordo (${label})`}
-                    className="h-20 w-20 rounded-md border border-border object-cover"
+                    className="h-24 w-24 rounded-md border border-border object-cover sm:h-20 sm:w-20"
                   />
                 </a>
                 <Button
@@ -182,16 +192,16 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
                   size="icon"
                   aria-label="Remover foto"
                   onClick={() => removePhoto(p.path)}
-                  className="absolute -right-2 -top-2 size-6 rounded-full"
+                  className="absolute -right-2 -top-2 size-7 rounded-full sm:size-6"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
                 </Button>
               </div>
             ))}
             {pendingItems.map((photo) => (
               <div
                 key={photo.id}
-                className="flex max-w-48 items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2"
+                className="flex max-w-[12rem] items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2"
               >
                 <span className="truncate text-xs" title={photo.file.name}>
                   {photo.file.name}
@@ -202,9 +212,9 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
                   size="icon"
                   aria-label={`Remover ${photo.file.name}`}
                   onClick={() => removePendingPhoto(photo.id)}
-                  className="size-6 shrink-0 text-destructive"
+                  className="size-7 shrink-0 text-destructive sm:size-6"
                 >
-                  <X className="size-3" />
+                  <X className="size-3.5 sm:size-3" />
                 </Button>
               </div>
             ))}
