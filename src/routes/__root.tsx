@@ -146,6 +146,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const auth = useSeiaAuth();
 
   useEffect(() => {
     registerPwa();
@@ -155,7 +156,13 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-      <Toaster richColors position="top-right" />
+      <MobileBottomNav auth={auth} />
+      <Toaster
+        richColors
+        position="top-center"
+        className="md:top-0 md:right-0 md:left-auto md:translate-x-0"
+        style={{ top: "calc(0.5rem + env(safe-area-inset-top, 0px))" }}
+      />
     </QueryClientProvider>
 
   );

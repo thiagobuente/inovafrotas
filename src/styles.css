@@ -154,3 +154,50 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-panel);
 }
+
+@utility safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Espaço reservado para a navegação inferior em telas pequenas. */
+.mobile-bottom-nav ~ main,
+.mobile-bottom-nav ~ div main,
+body:has(.mobile-bottom-nav) main,
+body:has(.mobile-bottom-nav) .min-h-screen {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .mobile-bottom-nav ~ main,
+  .mobile-bottom-nav ~ div main,
+  body:has(.mobile-bottom-nav) main,
+  body:has(.mobile-bottom-nav) .min-h-screen {
+    padding-bottom: 0;
+  }
+}
+
+/* Inputs de data/hora com altura mínima confortável para touch. */
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"] {
+  min-height: 2.75rem;
+}
+
+/* Toasts em telas pequenas usam largura confortável. */
+[data-sonner-toaster] {
+  --mobile-offset: 0.75rem;
+}
+
+@media (max-width: 767px) {
+  [data-sonner-toaster] {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: calc(100% - 1.5rem) !important;
+    max-width: 24rem !important;
+  }
+}
