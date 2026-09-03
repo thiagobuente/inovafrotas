@@ -160,7 +160,6 @@ function RootComponent() {
       <Toaster
         richColors
         position="top-center"
-        className="md:top-0 md:right-0 md:left-auto md:translate-x-0"
         style={{ top: "calc(0.5rem + env(safe-area-inset-top, 0px))" }}
       />
     </QueryClientProvider>
