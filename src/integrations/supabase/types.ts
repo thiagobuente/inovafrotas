@@ -146,6 +146,65 @@ export type Database = {
         }
         Relationships: []
       }
+      maintenance_records: {
+        Row: {
+          cost: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          maintenance_type: string
+          next_due_at: string | null
+          next_due_km: number | null
+          notes: string | null
+          performed_at: string | null
+          performed_km: number | null
+          updated_at: string
+          vehicle_id: string
+          workshop: string | null
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          maintenance_type?: string
+          next_due_at?: string | null
+          next_due_km?: number | null
+          notes?: string | null
+          performed_at?: string | null
+          performed_km?: number | null
+          updated_at?: string
+          vehicle_id: string
+          workshop?: string | null
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          maintenance_type?: string
+          next_due_at?: string | null
+          next_due_km?: number | null
+          notes?: string | null
+          performed_at?: string | null
+          performed_km?: number | null
+          updated_at?: string
+          vehicle_id?: string
+          workshop?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_records_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_logs: {
         Row: {
           audience: string
@@ -365,6 +424,7 @@ export type Database = {
           agenda: string
           assigned_driver_id: string | null
           assigned_vehicle_id: string | null
+          calendar_event_id: string | null
           created_at: string
           decided_at: string | null
           decided_by: string | null
@@ -387,6 +447,7 @@ export type Database = {
           agenda: string
           assigned_driver_id?: string | null
           assigned_vehicle_id?: string | null
+          calendar_event_id?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
@@ -409,6 +470,7 @@ export type Database = {
           agenda?: string
           assigned_driver_id?: string | null
           assigned_vehicle_id?: string | null
+          calendar_event_id?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
