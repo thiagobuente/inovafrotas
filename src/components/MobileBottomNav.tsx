@@ -9,6 +9,8 @@ import {
   Settings,
   Users,
   FileText,
+  BarChart3,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SeiaAuth } from "@/lib/seia";
@@ -27,7 +29,8 @@ export function MobileBottomNav({ auth }: { auth: SeiaAuth }) {
     { to: "/gestao", label: "Autorizar", icon: ClipboardList },
     { to: "/agenda", label: "Agenda", icon: CalendarDays },
     { to: "/frota", label: "Frota", icon: CarFront },
-    { to: "/diarios", label: "Diários", icon: BookOpen },
+    { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
+    { to: "/manutencao", label: "Manutenção", icon: Wrench },
     { to: "/notificacoes", label: "Avisos", icon: Bell },
   ];
 
