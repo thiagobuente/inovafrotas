@@ -156,7 +156,7 @@ function ManutencaoPage() {
       } else {
         const { error } = await supabase
           .from("maintenance_records")
-          .insert({ ...payload, created_by: auth.user?.id ?? null });
+          .insert({ ...payload, created_by: auth.user?.id ?? undefined });
         if (error) throw error;
       }
     },
