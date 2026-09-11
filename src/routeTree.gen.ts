@@ -17,6 +17,7 @@ import { Route as DiariosRouteImport } from './routes/diarios'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as FrotaRouteImport } from './routes/frota'
 import { Route as GestaoRouteImport } from './routes/gestao'
+import { Route as ManutencaoRouteImport } from './routes/manutencao'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as PainelRouteImport } from './routes/painel'
@@ -69,6 +70,11 @@ const FrotaRoute = FrotaRouteImport.update({
 const GestaoRoute = GestaoRouteImport.update({
   id: '/gestao',
   path: '/gestao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManutencaoRoute = ManutencaoRouteImport.update({
+  id: '/manutencao',
+  path: '/manutencao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
+  '/manutencao': typeof ManutencaoRoute
   '/mcp': typeof McpRoute
   '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
+  '/manutencao': typeof ManutencaoRoute
   '/mcp': typeof McpRoute
   '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
+  '/manutencao': typeof ManutencaoRoute
   '/mcp': typeof McpRoute
   '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/frota'
     | '/gestao'
+    | '/manutencao'
     | '/mcp'
     | '/notificacoes'
     | '/painel'
@@ -244,6 +254,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/frota'
     | '/gestao'
+    | '/manutencao'
     | '/mcp'
     | '/notificacoes'
     | '/painel'
@@ -267,6 +278,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/frota'
     | '/gestao'
+    | '/manutencao'
     | '/mcp'
     | '/notificacoes'
     | '/painel'
@@ -291,6 +303,7 @@ export interface RootRouteChildren {
   EntrarRoute: typeof EntrarRoute
   FrotaRoute: typeof FrotaRoute
   GestaoRoute: typeof GestaoRoute
+  ManutencaoRoute: typeof ManutencaoRoute
   McpRoute: typeof McpRoute
   NotificacoesRoute: typeof NotificacoesRoute
   PainelRoute: typeof PainelRoute
@@ -362,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/gestao'
       fullPath: '/gestao'
       preLoaderRoute: typeof GestaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manutencao': {
+      id: '/manutencao'
+      path: '/manutencao'
+      fullPath: '/manutencao'
+      preLoaderRoute: typeof ManutencaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -467,6 +487,7 @@ const rootRouteChildren: RootRouteChildren = {
   EntrarRoute: EntrarRoute,
   FrotaRoute: FrotaRoute,
   GestaoRoute: GestaoRoute,
+  ManutencaoRoute: ManutencaoRoute,
   McpRoute: McpRoute,
   NotificacoesRoute: NotificacoesRoute,
   PainelRoute: PainelRoute,

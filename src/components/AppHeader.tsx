@@ -12,6 +12,8 @@ import {
   Users,
   FileText,
   Home,
+  BarChart3,
+  Wrench,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,8 @@ const managerLinks = [
   { to: "/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/frota", label: "Frota", icon: CarFront },
   { to: "/diarios", label: "Diários de bordo", icon: BookOpen },
+  { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
+  { to: "/manutencao", label: "Manutenção", icon: Wrench },
   { to: "/notificacoes", label: "Notificações", icon: Bell },
   { to: "/configuracoes-email", label: "E-mail", icon: Settings },
   { to: "/usuarios", label: "Senhas", icon: Users },

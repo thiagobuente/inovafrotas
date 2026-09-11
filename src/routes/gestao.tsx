@@ -22,6 +22,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { useSeiaAuth, STATUS_LABELS, STATUS_TONE, formatDateTime } from "@/lib/seia";
 import { cn } from "@/lib/utils";
 import { sendNotification } from "@/lib/notifications.functions";
+import { syncRequestToCalendar } from "@/lib/calendar.functions";
 
 const MANAGER_TABS = [
   { value: "pending", label: "Pendentes" },
@@ -90,6 +91,7 @@ function GestaoPage() {
   const queryClient = useQueryClient();
   const { status: tab, protocol: focusProtocol } = Route.useSearch();
   const notify = useServerFn(sendNotification);
+  const syncCalendar = useServerFn(syncRequestToCalendar);
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
@@ -210,6 +212,12 @@ function GestaoPage() {
             ? "Solicitação recusada."
             : "Reserva cancelada. O solicitante foi avisado.",
       );
+
+      try {
+        await syncCalendar({ data: { requestId: request.id } });
+      } catch (calendarError) {
+        console.error("Falha ao sincronizar a agenda do Google", calendarError);
+      }
 
       try {
         const { results } = await notify({
