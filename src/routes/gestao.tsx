@@ -546,8 +546,8 @@ function RequestCard({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>
-                Designar motorista {request.needs_driver ? "(solicitado)" : "(opcional)"}
+              <Label className={request.needs_driver ? "font-semibold text-amber-700 dark:text-amber-300" : undefined}>
+                Designar motorista {request.needs_driver ? "(OBRIGATÓRIO — solicitado)" : "(opcional)"}
               </Label>
               <Select value={driverId} onValueChange={setDriverId}>
                 <SelectTrigger>
