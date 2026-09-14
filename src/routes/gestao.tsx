@@ -203,65 +203,67 @@ function GestaoPage() {
         toast.error("Não foi possível registrar a decisão: " + error.message);
         return;
       }
-      const vehicle = (vehicles ?? []).find((v) => v.id === vehicleId);
-      const driver = (drivers ?? []).find((d) => d.id === driverId);
+      // Atualiza a tela imediatamente — e-mails e agenda rodam em segundo plano.
+      queryClient.invalidateQueries({ queryKey: ["all-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["request-counts"] });
       toast.success(
         status === "approved"
-          ? "Solicitação autorizada."
+          ? "Solicitação autorizada. O solicitante será avisado por e-mail."
           : status === "rejected"
-            ? "Solicitação recusada."
-            : "Reserva cancelada. O solicitante foi avisado.",
+            ? "Solicitação recusada. O solicitante será avisado por e-mail."
+            : "Reserva cancelada. O solicitante será avisado por e-mail.",
       );
 
-      try {
-        await syncCalendar({ data: { requestId: request.id } });
-      } catch (calendarError) {
-        console.error("Falha ao sincronizar a agenda do Google", calendarError);
-      }
+      const vehicle = (vehicles ?? []).find((v) => v.id === vehicleId);
+      const driver = (drivers ?? []).find((d) => d.id === driverId);
 
-      try {
-        const { results } = await notify({
-          data: {
-            type:
-              status === "approved"
-                ? "request_approved"
-                : status === "rejected"
-                  ? "request_rejected"
-                  : "request_cancelled",
-            protocol: request.protocol,
-            requesterEmail: request.requester_email,
-            destination: request.destination,
-            agenda: request.agenda,
-            pickupAt: request.pickup_at,
-            returnAt: request.return_at,
-            vehicleLabel:
-              status === "approved" && vehicle
-                ? `${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`
-                : null,
-            driverLabel: status === "approved" && driver ? driver.full_name : null,
-            note: note.trim() || null,
-            previousStatus: request.status,
-            status,
-          },
-        });
-        const failed = (results ?? []).filter((r: any) => r.status !== "sent");
-        if (failed.length) {
+      void (async () => {
+        try {
+          await syncCalendar({ data: { requestId: request.id } });
+        } catch (calendarError) {
+          console.error("Falha ao sincronizar a agenda do Google", calendarError);
+        }
+
+        try {
+          const { results } = await notify({
+            data: {
+              type:
+                status === "approved"
+                  ? "request_approved"
+                  : status === "rejected"
+                    ? "request_rejected"
+                    : "request_cancelled",
+              protocol: request.protocol,
+              requesterEmail: request.requester_email,
+              destination: request.destination,
+              agenda: request.agenda,
+              pickupAt: request.pickup_at,
+              returnAt: request.return_at,
+              vehicleLabel:
+                status === "approved" && vehicle
+                  ? `${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`
+                  : null,
+              driverLabel: status === "approved" && driver ? driver.full_name : null,
+              note: note.trim() || null,
+              previousStatus: request.status,
+              status,
+            },
+          });
+          const failed = (results ?? []).filter((r: any) => r.status !== "sent");
+          if (failed.length) {
+            toast.error(
+              `E-mail não entregue para ${failed.map((r: any) => r.to).join(", ")}. Motivo: ${failed[0].reason ?? "desconhecido"}`,
+              { duration: 12000 },
+            );
+          }
+        } catch (notifyError) {
           toast.error(
-            `E-mail não entregue para ${failed.map((r: any) => r.to).join(", ")}. Motivo: ${failed[0].reason ?? "desconhecido"}`,
+            "A decisão foi registrada, mas a notificação falhou: " +
+              (notifyError instanceof Error ? notifyError.message : "erro inesperado"),
             { duration: 12000 },
           );
         }
-      } catch (notifyError) {
-        toast.error(
-          "A decisão foi registrada, mas a notificação falhou: " +
-            (notifyError instanceof Error ? notifyError.message : "erro inesperado"),
-          { duration: 12000 },
-        );
-      }
-
-
-      queryClient.invalidateQueries({ queryKey: ["all-requests"] });
-      queryClient.invalidateQueries({ queryKey: ["request-counts"] });
+      })();
     } catch (err) {
       toast.error(
         "Não foi possível registrar a decisão: " +
