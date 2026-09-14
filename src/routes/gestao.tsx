@@ -589,6 +589,10 @@ function RequestCard({
                   toast.error("Nenhum veículo disponível na frota.");
                   return;
                 }
+                if (request.needs_driver && !driverId) {
+                  toast.error("Esta solicitação pede condutor — selecione um motorista antes de autorizar.");
+                  return;
+                }
                 setVehicleId(first.id);
                 void onDecide(request, "approved", first.id, driverId || null, note);
               }}
@@ -612,9 +616,13 @@ function RequestCard({
 
           <div className="flex flex-wrap gap-3">
             <Button
-              onClick={() =>
-                onDecide(request, "approved", vehicleId || null, driverId || null, note)
-              }
+              onClick={() => {
+                if (request.needs_driver && !driverId) {
+                  toast.error("Esta solicitação pede condutor — selecione um motorista antes de autorizar.");
+                  return;
+                }
+                void onDecide(request, "approved", vehicleId || null, driverId || null, note);
+              }}
             >
               Autorizar
             </Button>
