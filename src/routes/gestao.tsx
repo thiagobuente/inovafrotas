@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Inbox } from "lucide-react";
+import { Inbox, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -405,8 +405,24 @@ function RequestCard({
   return (
     <article
       id={`req-${request.protocol}`}
-      className={cn("surface-panel p-6 scroll-mt-24", highlight && "ring-2 ring-primary")}
+      className={cn(
+        "surface-panel p-6 scroll-mt-24",
+        highlight && "ring-2 ring-primary",
+        request.needs_driver && request.status === "pending" && "border-amber-500/60",
+      )}
     >
+      {request.needs_driver && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-500/50 bg-amber-500/15 px-4 py-3">
+          <UserRound className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+            {request.status === "pending"
+              ? "Este solicitante pediu condutor — designe um motorista antes de autorizar."
+              : request.assigned_driver_id
+                ? "Viagem com condutor designado."
+                : "Esta viagem foi autorizada sem condutor designado."}
+          </p>
+        </div>
+      )}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-mono text-xs uppercase text-muted-foreground">{request.protocol}</p>
@@ -530,8 +546,8 @@ function RequestCard({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>
-                Designar motorista {request.needs_driver ? "(solicitado)" : "(opcional)"}
+              <Label className={request.needs_driver ? "font-semibold text-amber-700 dark:text-amber-300" : undefined}>
+                Designar motorista {request.needs_driver ? "(OBRIGATÓRIO — solicitado)" : "(opcional)"}
               </Label>
               <Select value={driverId} onValueChange={setDriverId}>
                 <SelectTrigger>
@@ -573,6 +589,10 @@ function RequestCard({
                   toast.error("Nenhum veículo disponível na frota.");
                   return;
                 }
+                if (request.needs_driver && !driverId) {
+                  toast.error("Esta solicitação pede condutor — selecione um motorista antes de autorizar.");
+                  return;
+                }
                 setVehicleId(first.id);
                 void onDecide(request, "approved", first.id, driverId || null, note);
               }}
@@ -596,9 +616,13 @@ function RequestCard({
 
           <div className="flex flex-wrap gap-3">
             <Button
-              onClick={() =>
-                onDecide(request, "approved", vehicleId || null, driverId || null, note)
-              }
+              onClick={() => {
+                if (request.needs_driver && !driverId) {
+                  toast.error("Esta solicitação pede condutor — selecione um motorista antes de autorizar.");
+                  return;
+                }
+                void onDecide(request, "approved", vehicleId || null, driverId || null, note);
+              }}
             >
               Autorizar
             </Button>
