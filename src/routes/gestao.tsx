@@ -405,8 +405,24 @@ function RequestCard({
   return (
     <article
       id={`req-${request.protocol}`}
-      className={cn("surface-panel p-6 scroll-mt-24", highlight && "ring-2 ring-primary")}
+      className={cn(
+        "surface-panel p-6 scroll-mt-24",
+        highlight && "ring-2 ring-primary",
+        request.needs_driver && request.status === "pending" && "border-amber-500/60",
+      )}
     >
+      {request.needs_driver && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-500/50 bg-amber-500/15 px-4 py-3">
+          <UserRound className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+            {request.status === "pending"
+              ? "Este solicitante pediu condutor — designe um motorista antes de autorizar."
+              : request.assigned_driver_id
+                ? "Viagem com condutor designado."
+                : "Esta viagem foi autorizada sem condutor designado."}
+          </p>
+        </div>
+      )}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-mono text-xs uppercase text-muted-foreground">{request.protocol}</p>
