@@ -276,7 +276,7 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
           ? await supabase.from("trip_logs").update(payload).eq("id", log.id)
           : await supabase.from("trip_logs").insert(payload);
         if (error) throw error;
-        return { photoCount: allPhotoPaths.length };
+        return { photoCount: allPhotoPaths.length, wasUpdate: !!log };
       } catch (error) {
         if (uploadedPaths.length > 0) {
           await supabase.storage.from("diario-bordo").remove(uploadedPaths);
@@ -286,9 +286,11 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
         setUploading(false);
       }
     },
-    onSuccess: ({ photoCount }) => {
+    onSuccess: ({ photoCount, wasUpdate }) => {
       toast.success(
-        `Diário registrado com ${photoCount} foto(s). Enviando cópia por e-mail ao gestor…`,
+        wasUpdate
+          ? `Diário corrigido e salvo (${photoCount} foto(s)). Enviando cópia atualizada ao gestor…`
+          : `Diário registrado com ${photoCount} foto(s). Enviando cópia por e-mail ao gestor…`,
       );
       setForm(null);
       setPhotos(null);
@@ -334,7 +336,7 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => setOpen((v) => !v)}>
-          {open ? "Fechar" : log ? "Editar registro" : "Preencher"}
+          {open ? "Fechar" : log ? "Editar / corrigir" : "Preencher"}
         </Button>
       </div>
 
@@ -480,7 +482,9 @@ export function TripLogPanel({ requestId }: { requestId: string }) {
                 ? `Enviando ${pendingPhotos.length} foto(s)…`
                 : save.isPending
                   ? "Salvando…"
-                  : `Salvar diário${pendingPhotos.length ? ` com ${pendingPhotos.length} foto(s)` : ""}`}
+                  : log
+                    ? `Salvar correções${pendingPhotos.length ? ` com ${pendingPhotos.length} foto(s)` : ""}`
+                    : `Salvar diário${pendingPhotos.length ? ` com ${pendingPhotos.length} foto(s)` : ""}`}
             </Button>
           </div>
         </div>
