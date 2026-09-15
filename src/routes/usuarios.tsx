@@ -84,6 +84,11 @@ function UsuariosPage() {
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
+    const strengthError = passwordStrengthError(password);
+    if (strengthError) {
+      toast.error(strengthError);
+      return;
+    }
     setBusy(true);
     try {
       const result = await resetPassword({ data: { email: email.trim().toLowerCase(), password } });

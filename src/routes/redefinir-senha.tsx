@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AppHeader } from "@/components/AppHeader";
 import { useSeiaAuth } from "@/lib/seia";
+import { passwordStrengthError, PASSWORD_RULE_MESSAGE } from "@/lib/password-strength";
 
 export const Route = createFileRoute("/redefinir-senha")({
   head: () => ({

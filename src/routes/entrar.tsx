@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppHeader } from "@/components/AppHeader";
 import { requestPasswordReset } from "@/lib/password.functions";
+import { passwordStrengthError, PASSWORD_RULE_MESSAGE } from "@/lib/password-strength";
 import { useSeiaAuth, isInstitutionalEmail, EMAIL_DOMAIN } from "@/lib/seia";
 
 function safeNext(next: unknown): string | null {
