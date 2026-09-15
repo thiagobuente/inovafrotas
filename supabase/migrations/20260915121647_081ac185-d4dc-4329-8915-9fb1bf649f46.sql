@@ -1,0 +1,2 @@
+CREATE POLICY "rate_limits_no_client_access" ON public.rate_limits FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
+CREATE POLICY "automation_settings_no_client_access" ON public.automation_settings FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
