@@ -18,6 +18,22 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
   }
 });
 
+// Cabeçalhos de proteção aplicados a todas as respostas do site.
+const securityHeadersMiddleware = createMiddleware().server(async ({ next }) => {
+  const result = await next();
+  const response = (result as { response?: Response }).response;
+  const headers = response?.headers;
+  if (headers) {
+    headers.set("X-Content-Type-Options", "nosniff");
+    headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    headers.set("X-XSS-Protection", "0");
+    headers.set("Permissions-Policy", "geolocation=(), microphone=(), payment=(), usb=()");
+    headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    headers.set("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  }
+  return result;
+});
+
 // Start installs this automatically when src/start.ts is absent; defining the
 // file opts out, so re-add it explicitly to keep server functions protected
 // from cross-site requests.
