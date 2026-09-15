@@ -30,6 +30,7 @@ import {
   managerUpdateAccount,
   managerDeleteAccount,
 } from "@/lib/password.functions";
+import { passwordStrengthError, PASSWORD_RULE_MESSAGE } from "@/lib/password-strength";
 import { useSeiaAuth, EMAIL_DOMAIN } from "@/lib/seia";
 
 type Account = { id: string; email: string; full_name: string; department: string | null };
