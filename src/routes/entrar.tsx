@@ -311,7 +311,7 @@ function EntrarPage() {
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres.</p>
+                  <p className="text-xs text-muted-foreground">{PASSWORD_RULE_MESSAGE}</p>
                 </div>
                 <Button type="submit" className="w-full" disabled={busy}>
                   Criar conta

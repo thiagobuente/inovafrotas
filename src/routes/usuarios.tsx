@@ -208,7 +208,7 @@ function UsuariosPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres.</p>
+            <p className="text-xs text-muted-foreground">{PASSWORD_RULE_MESSAGE}</p>
           </div>
           <Button type="submit" disabled={busy}>
             Redefinir senha

@@ -100,7 +100,8 @@ function RedefinirSenhaPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-              </div>
+                  <p className="text-xs text-muted-foreground">{PASSWORD_RULE_MESSAGE}</p>
+                </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirmar nova senha</Label>
                 <Input
