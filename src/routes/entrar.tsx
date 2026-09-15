@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppHeader } from "@/components/AppHeader";
 import { requestPasswordReset } from "@/lib/password.functions";
+import { passwordStrengthError, PASSWORD_RULE_MESSAGE } from "@/lib/password-strength";
 import { useSeiaAuth, isInstitutionalEmail, EMAIL_DOMAIN } from "@/lib/seia";
 
 function safeNext(next: unknown): string | null {
@@ -116,6 +117,11 @@ function EntrarPage() {
     e.preventDefault();
     if (!isInstitutionalEmail(email)) {
       toast.error(`Cadastro permitido apenas para e-mails ${EMAIL_DOMAIN}`);
+      return;
+    }
+    const strengthError = passwordStrengthError(password);
+    if (strengthError) {
+      toast.error(strengthError);
       return;
     }
     setBusy(true);
@@ -305,7 +311,7 @@ function EntrarPage() {
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres.</p>
+                  <p className="text-xs text-muted-foreground">{PASSWORD_RULE_MESSAGE}</p>
                 </div>
                 <Button type="submit" className="w-full" disabled={busy}>
                   Criar conta

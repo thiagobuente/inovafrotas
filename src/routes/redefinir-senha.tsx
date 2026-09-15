@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AppHeader } from "@/components/AppHeader";
 import { useSeiaAuth } from "@/lib/seia";
+import { passwordStrengthError, PASSWORD_RULE_MESSAGE } from "@/lib/password-strength";
 
 export const Route = createFileRoute("/redefinir-senha")({
   head: () => ({
@@ -48,8 +49,9 @@ function RedefinirSenhaPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) {
-      toast.error("A senha deve ter ao menos 8 caracteres.");
+    const strengthError = passwordStrengthError(password);
+    if (strengthError) {
+      toast.error(strengthError);
       return;
     }
     if (password !== confirm) {
@@ -98,7 +100,8 @@ function RedefinirSenhaPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-              </div>
+                  <p className="text-xs text-muted-foreground">{PASSWORD_RULE_MESSAGE}</p>
+                </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirmar nova senha</Label>
                 <Input

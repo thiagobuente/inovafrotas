@@ -30,6 +30,7 @@ import {
   managerUpdateAccount,
   managerDeleteAccount,
 } from "@/lib/password.functions";
+import { passwordStrengthError, PASSWORD_RULE_MESSAGE } from "@/lib/password-strength";
 import { useSeiaAuth, EMAIL_DOMAIN } from "@/lib/seia";
 
 type Account = { id: string; email: string; full_name: string; department: string | null };
@@ -84,6 +85,11 @@ function UsuariosPage() {
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
+    const strengthError = passwordStrengthError(password);
+    if (strengthError) {
+      toast.error(strengthError);
+      return;
+    }
     setBusy(true);
     try {
       const result = await resetPassword({ data: { email: email.trim().toLowerCase(), password } });
@@ -202,7 +208,7 @@ function UsuariosPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres.</p>
+            <p className="text-xs text-muted-foreground">{PASSWORD_RULE_MESSAGE}</p>
           </div>
           <Button type="submit" disabled={busy}>
             Redefinir senha

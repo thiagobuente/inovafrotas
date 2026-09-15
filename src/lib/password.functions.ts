@@ -17,8 +17,13 @@ function normalizeEmail(value: unknown): string {
 
 function assertStrongPassword(value: unknown): string {
   const password = typeof value === "string" ? value : "";
+  // Mesma regra forte das telas: 8+ caracteres, maiúscula, minúscula, número e símbolo.
   if (password.length < 8) throw new Error("A nova senha deve ter pelo menos 8 caracteres.");
   if (password.length > 72) throw new Error("A nova senha é longa demais (máximo 72 caracteres).");
+  if (!/[a-z]/.test(password)) throw new Error("A senha precisa de pelo menos uma letra minúscula.");
+  if (!/[A-Z]/.test(password)) throw new Error("A senha precisa de pelo menos uma letra maiúscula.");
+  if (!/[0-9]/.test(password)) throw new Error("A senha precisa de pelo menos um número.");
+  if (!/[^A-Za-z0-9]/.test(password)) throw new Error("A senha precisa de pelo menos um símbolo (ex.: !@#$%).");
   return password;
 }
 
