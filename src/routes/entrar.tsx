@@ -118,6 +118,11 @@ function EntrarPage() {
       toast.error(`Cadastro permitido apenas para e-mails ${EMAIL_DOMAIN}`);
       return;
     }
+    const strengthError = passwordStrengthError(password);
+    if (strengthError) {
+      toast.error(strengthError);
+      return;
+    }
     setBusy(true);
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
