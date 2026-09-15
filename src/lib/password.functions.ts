@@ -48,6 +48,10 @@ export const requestPasswordReset = createServerFn({ method: "POST" })
   .inputValidator((input: { email: string }) => ({ email: normalizeEmail(input?.email) }))
   .handler(async ({ data }) => {
     const redirectTo = `${siteOrigin()}/redefinir-senha`;
+    const { enforceRateLimit, clientIp } = await import("@/lib/security/rate-limit.server");
+    // Freio contra abuso: 5 pedidos por e-mail e 15 por IP a cada 15 minutos.
+    await enforceRateLimit("senha:email", data.email, 5, 900);
+    await enforceRateLimit("senha:ip", clientIp(), 15, 900);
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
@@ -98,6 +102,8 @@ export const managerResetPassword = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data, context }) => {
     await requireManager(context as never);
+    const { enforceRateLimit } = await import("@/lib/security/rate-limit.server");
+    await enforceRateLimit("senha:gestor", context.userId, 20, 900);
 
     // O alvo precisa existir como perfil institucional visível ao gestor (RLS).
     const { data: profile, error: profileError } = await context.supabase
