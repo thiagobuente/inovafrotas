@@ -97,7 +97,7 @@ export const listAccounts = createServerFn({ method: "GET" })
     await requireManager(context as never);
     const { data, error } = await context.supabase
       .from("profiles")
-      .select("id, email, full_name, department")
+      .select("id, email, full_name, department, regional")
       .order("email");
     if (error) throw new Error(`Não foi possível listar as contas: ${error.message}`);
     return { accounts: data ?? [] };
@@ -137,17 +137,26 @@ export const managerResetPassword = createServerFn({ method: "POST" })
 /** O gestor atualiza os dados cadastrais de uma conta institucional. */
 export const managerUpdateAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; full_name: string; department?: string | null; email?: string }) => {
-    const id = typeof input?.id === "string" ? input.id.trim() : "";
-    if (!id) throw new Error("Conta inválida.");
-    return {
-      id,
-      full_name: typeof input?.full_name === "string" ? input.full_name.trim() : "",
-      department:
-        typeof input?.department === "string" && input.department.trim() ? input.department.trim() : null,
-      email: input?.email ? normalizeEmail(input.email) : undefined,
-    };
-  })
+  .inputValidator(
+    (input: {
+      id: string;
+      full_name: string;
+      department?: string | null;
+      regional?: string | null;
+      email?: string;
+    }) => {
+      const id = typeof input?.id === "string" ? input.id.trim() : "";
+      if (!id) throw new Error("Conta inválida.");
+      return {
+        id,
+        full_name: typeof input?.full_name === "string" ? input.full_name.trim() : "",
+        department:
+          typeof input?.department === "string" && input.department.trim() ? input.department.trim() : null,
+        regional: normalizeRegional(input?.regional),
+        email: input?.email ? normalizeEmail(input.email) : undefined,
+      };
+    },
+  )
   .handler(async ({ data, context }) => {
     await requireManager(context as never);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
