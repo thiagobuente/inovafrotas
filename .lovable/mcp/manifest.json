@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://zvczfsoqfivrqawivwyx.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "gestor-de-veiculos-inova",
+      "version": "0.1.0",
+      "title": "Gestor de Veículos Inova"
+    },
+    "tools": [
+      {
+        "name": "list_vehicles",
+        "title": "Listar veículos",
+        "description": "Lista os veículos cadastrados na frota, com placa, modelo, capacidade e situação.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "description": "Filtrar por situação do veículo (ex.: available).",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_requests",
+        "title": "Listar solicitações",
+        "description": "Lista as solicitações de veículo visíveis para o usuário conectado (as próprias, ou todas se for gestor).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "description": "Filtrar por status: pending, approved, rejected, cancelled ou completed.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Quantidade máxima de registros (padrão 20).",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_request",
+        "title": "Criar solicitação de veículo",
+        "description": "Cria uma nova solicitação de veículo para o usuário conectado. Datas em ISO 8601 (ex.: 2026-08-20T09:00).",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "destination": {
+              "type": "string",
+              "description": "Destino da viagem."
+            },
+            "agenda": {
+              "type": "string",
+              "description": "Motivo/agenda institucional da viagem."
+            },
+            "pickup_at": {
+              "type": "string",
+              "description": "Data e hora de saída (ISO 8601)."
+            },
+            "return_at": {
+              "type": "string",
+              "description": "Data e hora de retorno (ISO 8601)."
+            },
+            "passengers_count": {
+              "description": "Número de passageiros (padrão 1).",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "needs_driver": {
+              "description": "Se precisa de motorista (padrão true).",
+              "type": "boolean"
+            },
+            "notes": {
+              "description": "Observações adicionais.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "destination",
+            "agenda",
+            "pickup_at",
+            "return_at"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "cancel_request",
+        "title": "Cancelar solicitação",
+        "description": "Cancela uma solicitação de veículo pelo protocolo, informando o motivo.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "protocol": {
+              "type": "string",
+              "description": "Protocolo da solicitação (ex.: SEIA-2026-0001)."
+            },
+            "reason": {
+              "type": "string",
+              "description": "Motivo do cancelamento."
+            }
+          },
+          "required": [
+            "protocol",
+            "reason"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
