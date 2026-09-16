@@ -15,16 +15,21 @@ function normalizeEmail(value: unknown): string {
   return email;
 }
 
+const REGIONAIS = ["Curitiba", "Ponta Grossa", "Londrina", "Maringá", "Jacarezinho"];
+
 function assertStrongPassword(value: unknown): string {
   const password = typeof value === "string" ? value : "";
-  // Mesma regra forte das telas: 8+ caracteres, maiúscula, minúscula, número e símbolo.
-  if (password.length < 8) throw new Error("A nova senha deve ter pelo menos 8 caracteres.");
+  // Mesma regra simples das telas: 6+ caracteres (números ou letras).
+  if (password.length < 6) throw new Error("A nova senha deve ter pelo menos 6 caracteres.");
   if (password.length > 72) throw new Error("A nova senha é longa demais (máximo 72 caracteres).");
-  if (!/[a-z]/.test(password)) throw new Error("A senha precisa de pelo menos uma letra minúscula.");
-  if (!/[A-Z]/.test(password)) throw new Error("A senha precisa de pelo menos uma letra maiúscula.");
-  if (!/[0-9]/.test(password)) throw new Error("A senha precisa de pelo menos um número.");
-  if (!/[^A-Za-z0-9]/.test(password)) throw new Error("A senha precisa de pelo menos um símbolo (ex.: !@#$%).");
   return password;
+}
+
+function normalizeRegional(value: unknown): string | null {
+  const regional = typeof value === "string" ? value.trim() : "";
+  if (!regional) return null;
+  if (!REGIONAIS.includes(regional)) throw new Error("Selecione uma regional válida.");
+  return regional;
 }
 
 function siteOrigin(): string {
