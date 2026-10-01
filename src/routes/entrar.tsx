@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppHeader } from "@/components/AppHeader";
 import { requestPasswordReset } from "@/lib/password.functions";
-import { passwordStrengthError, PASSWORD_RULE_MESSAGE } from "@/lib/password-strength";
+import { passwordStrengthError, PASSWORD_RULE_MESSAGE, REGIONAIS } from "@/lib/password-strength";
 import { useSeiaAuth, isInstitutionalEmail, EMAIL_DOMAIN } from "@/lib/seia";
 
 function safeNext(next: unknown): string | null {
@@ -52,6 +52,7 @@ function EntrarPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [department, setDepartment] = useState("");
+  const [regional, setRegional] = useState("");
   const [busy, setBusy] = useState(false);
   const [forgot, setForgot] = useState(false);
   const sendReset = useServerFn(requestPasswordReset);
@@ -119,6 +120,10 @@ function EntrarPage() {
       toast.error(`Cadastro permitido apenas para e-mails ${EMAIL_DOMAIN}`);
       return;
     }
+    if (!regional) {
+      toast.error("Selecione a sua regional.");
+      return;
+    }
     const strengthError = passwordStrengthError(password);
     if (strengthError) {
       toast.error(strengthError);
@@ -130,7 +135,7 @@ function EntrarPage() {
       password,
       options: {
         emailRedirectTo: next ? `${window.location.origin}${next}` : window.location.origin,
-        data: { full_name: fullName, department },
+        data: { full_name: fullName, department, regional },
       },
     });
     setBusy(false);
@@ -156,6 +161,7 @@ function EntrarPage() {
         email: email.trim().toLowerCase(),
         full_name: fullName,
         department,
+        regional,
       });
       toast.success("Conta criada com sucesso.");
       if (next) {
@@ -280,6 +286,21 @@ function EntrarPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="regional">Selecionar Regional</Label>
+                  <select
+                    id="regional"
+                    required
+                    value={regional}
+                    onChange={(e) => setRegional(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="" disabled>Selecione…</option>
+                    {REGIONAIS.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="email2">E-mail institucional</Label>
                   <Input
                     id="email2"
@@ -297,7 +318,7 @@ function EntrarPage() {
                       id="password2"
                       type={showPassword ? "text" : "password"}
                       required
-                      minLength={8}
+                      minLength={6}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pr-10"

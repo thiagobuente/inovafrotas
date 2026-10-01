@@ -96,7 +96,7 @@ function RedefinirSenhaPage() {
                   id="new-password"
                   type="password"
                   required
-                  minLength={8}
+                  minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -108,7 +108,7 @@ function RedefinirSenhaPage() {
                   id="confirm-password"
                   type="password"
                   required
-                  minLength={8}
+                  minLength={6}
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                 />
