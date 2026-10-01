@@ -61,7 +61,7 @@ export const Route = createFileRoute("/gestao")({
   errorComponent: GestaoError,
 });
 
-function GestaoError({ error, reset }: { error: Error; reset: () => void }) {
+function GestaoError({ error, reset }: import("@tanstack/react-router").ErrorComponentProps) {
   const router = useRouter();
   return (
     <div className="min-h-screen">
