@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -193,7 +194,11 @@ function GestaoPage() {
         .update({
           status,
           assigned_vehicle_id: status === "approved" ? vehicleId : null,
-          assigned_driver_id: status === "approved" ? driverId : null,
+          assigned_driver_id:
+            status === "approved" && driverId && !driverId.startsWith("other:") ? driverId : null,
+          ...(status === "approved" && driverId?.startsWith("other:")
+            ? { external_driver_name: driverId.slice(6).trim() }
+            : {}),
           decision_note: note.trim() || null,
           decided_by: managerId,
           decided_at: new Date().toISOString(),
@@ -243,7 +248,14 @@ function GestaoPage() {
                 status === "approved" && vehicle
                   ? `${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`
                   : null,
-              driverLabel: status === "approved" && driver ? driver.full_name : null,
+              driverLabel:
+                status === "approved"
+                  ? driver
+                    ? driver.full_name
+                    : driverId?.startsWith("other:")
+                      ? driverId.slice(6).trim()
+                      : null
+                  : null,
               note: note.trim() || null,
               previousStatus: request.status,
               status,
@@ -400,7 +412,14 @@ function RequestCard({
   ) => Promise<void>;
 }) {
   const [vehicleId, setVehicleId] = useState<string>("");
-  const [driverId, setDriverId] = useState<string>("");
+  const [driverChoice, setDriverChoice] = useState<string>("");
+  const [otherDriver, setOtherDriver] = useState("");
+  const driverId =
+    driverChoice === "__other__"
+      ? otherDriver.trim()
+        ? `other:${otherDriver.trim()}`
+        : ""
+      : driverChoice;
   const [note, setNote] = useState("");
 
 
@@ -419,7 +438,7 @@ function RequestCard({
           <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
             {request.status === "pending"
               ? "Este solicitante pediu condutor — designe um motorista antes de autorizar."
-              : request.assigned_driver_id
+              : request.assigned_driver_id || request.external_driver_name
                 ? "Viagem com condutor designado."
                 : "Esta viagem foi autorizada sem condutor designado."}
           </p>
@@ -458,9 +477,10 @@ function RequestCard({
         </div>
       </dl>
 
-      {!request.needs_driver && request.external_driver_name && (
+      {request.external_driver_name && (
         <p className="mt-3 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-          Condutor informado pelo solicitante: {request.external_driver_name}
+          {request.needs_driver ? "Motorista designado (outro)" : "Condutor informado pelo solicitante"}:{" "}
+          {request.external_driver_name}
         </p>
       )}
 
@@ -551,7 +571,7 @@ function RequestCard({
               <Label className={request.needs_driver ? "font-semibold text-amber-700 dark:text-amber-300" : undefined}>
                 Designar motorista {request.needs_driver ? "(OBRIGATÓRIO — solicitado)" : "(opcional)"}
               </Label>
-              <Select value={driverId} onValueChange={setDriverId}>
+              <Select value={driverChoice} onValueChange={setDriverChoice}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o motorista" />
                 </SelectTrigger>
@@ -563,8 +583,18 @@ function RequestCard({
                         {d.full_name} (cat. {d.license_category})
                       </SelectItem>
                     ))}
+                  <SelectItem value="__other__">Outro (digitar nome)</SelectItem>
                 </SelectContent>
               </Select>
+              {driverChoice === "__other__" && (
+                <Input
+                  autoFocus
+                  maxLength={120}
+                  placeholder="Nome do motorista designado"
+                  value={otherDriver}
+                  onChange={(e) => setOtherDriver(e.target.value)}
+                />
+              )}
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label>Observação / motivo</Label>
@@ -592,7 +622,7 @@ function RequestCard({
                   return;
                 }
                 if (request.needs_driver && !driverId) {
-                  toast.error("Esta solicitação pede condutor — selecione um motorista antes de autorizar.");
+                  toast.error("Esta solicitação pede condutor — selecione um motorista (ou digite o nome em “Outro”) antes de autorizar.");
                   return;
                 }
                 setVehicleId(first.id);
@@ -620,7 +650,7 @@ function RequestCard({
             <Button
               onClick={() => {
                 if (request.needs_driver && !driverId) {
-                  toast.error("Esta solicitação pede condutor — selecione um motorista antes de autorizar.");
+                  toast.error("Esta solicitação pede condutor — selecione um motorista (ou digite o nome em “Outro”) antes de autorizar.");
                   return;
                 }
                 void onDecide(request, "approved", vehicleId || null, driverId || null, note);
