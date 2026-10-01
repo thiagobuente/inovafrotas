@@ -116,6 +116,20 @@ function GestaoPage() {
     },
   });
 
+  const requesterIds = [...new Set((requests ?? []).map((r) => r.requester_id))];
+  const { data: regionais } = useQuery({
+    queryKey: ["requester-regionais", requesterIds],
+    enabled: requesterIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, regional")
+        .in("id", requesterIds);
+      if (error) throw error;
+      return Object.fromEntries((data ?? []).map((p) => [p.id, p.regional]));
+    },
+  });
+
   useEffect(() => {
     if (!focusProtocol || !requests?.length) return;
     document
@@ -367,6 +381,7 @@ function GestaoPage() {
                 drivers={drivers ?? []}
                 onDecide={decide}
                 highlight={focusProtocol === r.protocol}
+                regional={regionais?.[r.requester_id] ?? null}
               />
             ))}
           </TabsContent>
@@ -398,8 +413,10 @@ function RequestCard({
   drivers,
   onDecide,
   highlight,
+  regional,
 }: {
   highlight?: boolean;
+  regional?: string | null;
   request: Record<string, any>;
   vehicles: VehicleRow[];
   drivers: DriverRow[];
@@ -449,6 +466,11 @@ function RequestCard({
           <p className="font-mono text-xs uppercase text-muted-foreground">{request.protocol}</p>
           <h2 className="mt-1 text-lg font-semibold">{request.destination}</h2>
           <p className="text-sm text-muted-foreground">{request.requester_email}</p>
+          {regional && (
+            <p className="mt-1 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+              Regional {regional}
+            </p>
+          )}
         </div>
         <span
           className={cn("rounded-full border px-3 py-1 text-xs font-medium", STATUS_TONE[request.status])}
