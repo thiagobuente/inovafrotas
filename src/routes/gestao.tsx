@@ -116,6 +116,20 @@ function GestaoPage() {
     },
   });
 
+  const requesterIds = [...new Set((requests ?? []).map((r) => r.requester_id))];
+  const { data: regionais } = useQuery({
+    queryKey: ["requester-regionais", requesterIds],
+    enabled: requesterIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, regional")
+        .in("id", requesterIds);
+      if (error) throw error;
+      return Object.fromEntries((data ?? []).map((p) => [p.id, p.regional]));
+    },
+  });
+
   useEffect(() => {
     if (!focusProtocol || !requests?.length) return;
     document
@@ -367,6 +381,7 @@ function GestaoPage() {
                 drivers={drivers ?? []}
                 onDecide={decide}
                 highlight={focusProtocol === r.protocol}
+                regional={regionais?.[r.requester_id] ?? null}
               />
             ))}
           </TabsContent>
