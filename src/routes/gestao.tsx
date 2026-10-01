@@ -413,8 +413,10 @@ function RequestCard({
   drivers,
   onDecide,
   highlight,
+  regional,
 }: {
   highlight?: boolean;
+  regional?: string | null;
   request: Record<string, any>;
   vehicles: VehicleRow[];
   drivers: DriverRow[];
