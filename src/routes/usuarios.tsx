@@ -30,10 +30,10 @@ import {
   managerUpdateAccount,
   managerDeleteAccount,
 } from "@/lib/password.functions";
-import { passwordStrengthError, PASSWORD_RULE_MESSAGE } from "@/lib/password-strength";
+import { passwordStrengthError, PASSWORD_RULE_MESSAGE, REGIONAIS } from "@/lib/password-strength";
 import { useSeiaAuth, EMAIL_DOMAIN } from "@/lib/seia";
 
-type Account = { id: string; email: string; full_name: string; department: string | null };
+type Account = { id: string; email: string; full_name: string; department: string | null; regional?: string | null };
 
 
 export const Route = createFileRoute("/usuarios")({
@@ -69,7 +69,7 @@ function UsuariosPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<Account | null>(null);
-  const [editForm, setEditForm] = useState({ full_name: "", department: "", email: "" });
+  const [editForm, setEditForm] = useState({ full_name: "", department: "", regional: "", email: "" });
   const [removing, setRemoving] = useState<Account | null>(null);
 
   const loadAccounts = useCallback(() => {
@@ -107,6 +107,7 @@ function UsuariosPage() {
     setEditForm({
       full_name: account.full_name ?? "",
       department: account.department ?? "",
+      regional: account.regional ?? "",
       email: account.email,
     });
   }
@@ -121,6 +122,7 @@ function UsuariosPage() {
           id: editing.id,
           full_name: editForm.full_name,
           department: editForm.department,
+          regional: editForm.regional || null,
           ...(editForm.email.trim().toLowerCase() !== editing.email
             ? { email: editForm.email }
             : {}),
@@ -204,7 +206,7 @@ function UsuariosPage() {
               id="nova-senha"
               type="text"
               required
-              minLength={8}
+              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -228,6 +230,9 @@ function UsuariosPage() {
                   <p className="text-xs text-muted-foreground">{a.email}</p>
                   {a.department && (
                     <p className="text-xs text-muted-foreground">Setor: {a.department}</p>
+                  )}
+                  {a.regional && (
+                    <p className="text-xs text-muted-foreground">Regional: {a.regional}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -278,6 +283,20 @@ function UsuariosPage() {
                   value={editForm.department}
                   onChange={(e) => setEditForm((f) => ({ ...f, department: e.target.value }))}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-regional">Regional</Label>
+                <select
+                  id="edit-regional"
+                  value={editForm.regional}
+                  onChange={(e) => setEditForm((f) => ({ ...f, regional: e.target.value }))}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">Não informada</option>
+                  {REGIONAIS.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-email">E-mail institucional</Label>

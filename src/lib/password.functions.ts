@@ -174,6 +174,7 @@ export const managerUpdateAccount = createServerFn({ method: "POST" })
       .update({
         full_name: data.full_name,
         department: data.department,
+        regional: data.regional,
         ...(data.email ? { email: data.email } : {}),
       })
       .eq("id", data.id);
