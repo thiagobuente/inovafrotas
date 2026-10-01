@@ -68,7 +68,7 @@ function GestaoError({ error, reset }: import("@tanstack/react-router").ErrorCom
       <main className="mx-auto max-w-xl px-4 py-24 text-center">
         <h1 className="text-2xl font-semibold">Não foi possível carregar o painel</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          {error?.message || "Erro inesperado ao processar a autorização."}
+          {(error as Error | undefined)?.message || "Erro inesperado ao processar a autorização."}
         </p>
         <Button
           className="mt-6"
