@@ -1,0 +1,1 @@
+UPDATE public.automation_settings SET cron_token = encode(extensions.gen_random_bytes(32), 'hex'), updated_at = now() WHERE id = true;

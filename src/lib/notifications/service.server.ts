@@ -1,3 +1,4 @@
+import { maskEmail } from "./mask";
 import { buildInAppBody, buildMessages } from "./templates";
 import { resolveProvider } from "./provider.server";
 import { loadEmailSettings } from "./settings.server";
@@ -27,7 +28,7 @@ export class NotificationService {
         result = await provider.send(message);
       } catch (error) {
         const reason = error instanceof Error ? error.stack || error.message : String(error);
-        console.error(`[notificacao:excecao] ${message.to} — ${reason}`);
+        console.error(`[notificacao:excecao] ${maskEmail(message.to)} — ${reason}`);
         result = {
           to: message.to,
           audience: message.audience,
@@ -37,7 +38,7 @@ export class NotificationService {
         };
       }
       console.info(
-        `[notificacao:resultado] ${event.type} ${event.protocol} -> ${message.to} status=${result.status} provedor=${result.provider} de=${result.from ?? settings.fromEmail} responder=${result.replyTo ?? "-"} messageId=${result.messageId ?? "-"} ${Date.now() - startedAt}ms${result.reason ? ` motivo=${result.reason}` : ""}`,
+        `[notificacao:resultado] ${event.type} ${event.protocol} -> ${maskEmail(message.to)} status=${result.status} provedor=${result.provider} de=${result.from ?? settings.fromEmail} responder=${result.replyTo ?? "-"} messageId=${result.messageId ?? "-"} ${Date.now() - startedAt}ms${result.reason ? ` motivo=${result.reason}` : ""}`,
       );
 
       results.push(result);
@@ -58,7 +59,7 @@ export class NotificationService {
       result = await provider.send(message);
     } catch (error) {
       const reason = error instanceof Error ? error.stack || error.message : String(error);
-      console.error(`[notificacao:avulso:excecao] ${message.to} — ${reason}`);
+      console.error(`[notificacao:avulso:excecao] ${maskEmail(message.to)} — ${reason}`);
       result = {
         to: message.to,
         audience: message.audience,
@@ -68,7 +69,7 @@ export class NotificationService {
       };
     }
     console.info(
-      `[notificacao:avulso] ${message.to} status=${result.status} provedor=${result.provider}${result.reason ? ` motivo=${result.reason}` : ""}`,
+      `[notificacao:avulso] ${maskEmail(message.to)} status=${result.status} provedor=${result.provider}${result.reason ? ` motivo=${result.reason}` : ""}`,
     );
     await this.log({
       event_type: meta?.eventType ?? "password_reset",
@@ -103,7 +104,7 @@ export class NotificationService {
       result = await provider.send(message);
     } catch (error) {
       const reason = error instanceof Error ? error.stack || error.message : String(error);
-      console.error(`[notificacao:teste:excecao] ${to} — ${reason}`);
+      console.error(`[notificacao:teste:excecao] ${maskEmail(to)} — ${reason}`);
       result = {
         to,
         audience: "manager",
@@ -113,7 +114,7 @@ export class NotificationService {
       };
     }
     console.info(
-      `[notificacao:teste] ${to} status=${result.status} provedor=${result.provider}${result.reason ? ` motivo=${result.reason}` : ""}`,
+      `[notificacao:teste] ${maskEmail(to)} status=${result.status} provedor=${result.provider}${result.reason ? ` motivo=${result.reason}` : ""}`,
     );
     await this.log({
       event_type: "test_email",

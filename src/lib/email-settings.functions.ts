@@ -146,6 +146,9 @@ export const sendTestEmail = createServerFn({ method: "POST" })
   .inputValidator((input: { to: string }) => {
     const to = input?.to?.trim().toLowerCase() ?? "";
     assertEmail(to, "Destinatário do teste");
+    if (!to.endsWith("@inova.pr.gov.br")) {
+      throw new Error("O e-mail de teste só pode ser enviado para endereços @inova.pr.gov.br.");
+    }
     return { to };
   })
   .handler(async ({ data, context }) => {

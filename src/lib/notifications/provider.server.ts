@@ -1,3 +1,4 @@
+import { maskEmail } from "./mask";
 import type {
   DeliveryResult,
   EmailAttachment,
@@ -18,7 +19,7 @@ function fail(
   status: DeliveryResult["status"] = "failed",
   extra: Partial<DeliveryResult> = {},
 ): DeliveryResult {
-  console.error(`[notificacao:${provider}:${status}] ${message.to} — ${reason}`);
+  console.error(`[notificacao:${provider}:${status}] ${maskEmail(message.to)} — ${reason}`);
   return {
     to: message.to,
     audience: message.audience,
@@ -108,7 +109,7 @@ class BrevoEmailProvider implements NotificationProvider {
         messageId = null;
       }
       console.info(
-        `[notificacao:brevo:sent] destinatario=${message.to} de=${meta.from} responder=${meta.replyTo ?? "-"} messageId=${messageId ?? "-"} em=${meta.sentAt}`,
+        `[notificacao:brevo:sent] destinatario=${maskEmail(message.to)} de=${meta.from} responder=${meta.replyTo ?? "-"} messageId=${messageId ?? "-"} em=${meta.sentAt}`,
       );
       return {
         to: message.to,
@@ -191,7 +192,7 @@ class ResendEmailProvider implements NotificationProvider {
         messageId = null;
       }
       console.info(
-        `[notificacao:resend:sent] destinatario=${message.to} de=${meta.from} responder=${meta.replyTo ?? "-"} messageId=${messageId ?? "-"} em=${meta.sentAt}`,
+        `[notificacao:resend:sent] destinatario=${maskEmail(message.to)} de=${meta.from} responder=${meta.replyTo ?? "-"} messageId=${messageId ?? "-"} em=${meta.sentAt}`,
       );
       return {
         to: message.to,
@@ -340,7 +341,7 @@ class GmailEmailProvider implements NotificationProvider {
         messageId = null;
       }
       console.info(
-        `[notificacao:gmail:sent] destinatario=${message.to} de=${meta.from} responder=${meta.replyTo ?? "-"} messageId=${messageId ?? "-"} em=${meta.sentAt}`,
+        `[notificacao:gmail:sent] destinatario=${maskEmail(message.to)} de=${meta.from} responder=${meta.replyTo ?? "-"} messageId=${messageId ?? "-"} em=${meta.sentAt}`,
       );
       return {
         to: message.to,
