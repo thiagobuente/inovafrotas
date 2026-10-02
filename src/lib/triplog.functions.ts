@@ -20,7 +20,7 @@ export const emailTripLog = createServerFn({ method: "POST" })
     const { data: log, error } = await supabase
       .from("trip_logs")
       .select(
-        "departure_at, departure_km, return_at, return_km, incidents, photo_paths, vehicle_requests!inner(protocol, requester_email, agenda, destination, pickup_at, return_at, external_driver_name, vehicles(plate, brand, model), drivers(full_name))",
+        "departure_at, departure_km, return_at, return_km, incidents, photo_paths, vehicle_requests!inner(requester_id, protocol, requester_email, agenda, destination, pickup_at, return_at, external_driver_name, vehicles(plate, brand, model), drivers(full_name))",
       )
       .eq("request_id", data.requestId)
       .maybeSingle();
@@ -29,6 +29,7 @@ export const emailTripLog = createServerFn({ method: "POST" })
     if (!log) throw new Error("Diário de bordo não encontrado ou sem permissão.");
 
     const request = log.vehicle_requests as unknown as {
+      requester_id: string;
       protocol: string;
       requester_email: string;
       agenda: string;
@@ -57,6 +58,12 @@ export const emailTripLog = createServerFn({ method: "POST" })
       returnAt: log.return_at,
       returnKm: log.return_km,
       incidents: log.incidents,
-      photoPaths: log.photo_paths ?? [],
+      // Só anexa fotos guardadas na pasta desta solicitação do próprio solicitante.
+      photoPaths: (log.photo_paths ?? []).filter(
+        (p: string) =>
+          typeof p === "string" &&
+          !p.includes("..") &&
+          p.startsWith(`${request.requester_id}/${data.requestId}/`),
+      ),
     });
   });

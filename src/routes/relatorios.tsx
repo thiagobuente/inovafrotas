@@ -209,7 +209,11 @@ function RelatoriosPage() {
       }),
     ];
     const csv = rows
-      .map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(";"))
+      .map((row) => row.map((cell) => {
+          let value = String(cell ?? "");
+          if (/^[=+\-@\t\r]/.test(value)) value = `'${value}`;
+          return `"${value.replace(/"/g, '""')}"`;
+        }).join(";"))
       .join("\n");
     downloadBlob(`\uFEFF${csv}`, `seia-relatorio-${from}_a_${to}.csv`, "text/csv;charset=utf-8");
   }
