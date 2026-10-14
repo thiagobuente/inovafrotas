@@ -59,12 +59,14 @@ function EntrarPage() {
 
   useEffect(() => {
     if (!auth.user) return;
+    if (!auth.roleLoaded) return;
     if (next) {
       window.location.href = next;
       return;
     }
-    navigate({ to: "/painel", replace: true });
-  }, [auth.user, navigate, next]);
+    navigate({ to: auth.isDriver ? "/motorista" : "/painel", replace: true });
+  }, [auth.user, auth.roleLoaded, auth.isDriver, navigate, next]);
+  const [asDriver, setAsDriver] = useState(false);
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -107,11 +109,7 @@ function EntrarPage() {
       toast.error("Não foi possível entrar: " + error.message);
       return;
     }
-    if (next) {
-      window.location.href = next;
-      return;
-    }
-    navigate({ to: "/painel" });
+    // o redirecionamento por perfil acontece no efeito acima
   }
 
   async function handleSignUp(e: React.FormEvent) {
@@ -163,6 +161,16 @@ function EntrarPage() {
         department,
         regional,
       });
+      if (asDriver) {
+        const { error: roleErr } = await supabase.rpc("claim_driver_role");
+        if (roleErr) {
+          toast.error("Conta criada, mas não foi possível ativar o perfil de motorista.");
+          return;
+        }
+        toast.success("Conta de motorista criada com sucesso.");
+        window.location.href = "/motorista";
+        return;
+      }
       toast.success("Conta criada com sucesso.");
       if (next) {
         window.location.href = next;
@@ -171,6 +179,80 @@ function EntrarPage() {
       navigate({ to: "/painel" });
     }
   }
+
+  const signupForm = (
+              <form className="mt-5 space-y-4" onSubmit={handleSignUp}>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome completo</Label>
+                  <Input
+                    id="name"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dept">Setor / Diretoria</Label>
+                  <Input
+                    id="dept"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="regional">Selecionar Regional</Label>
+                  <select
+                    id="regional"
+                    required
+                    value={regional}
+                    onChange={(e) => setRegional(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="" disabled>Selecione…</option>
+                    {REGIONAIS.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email2">E-mail institucional</Label>
+                  <Input
+                    id="email2"
+                    type="email"
+                    required
+                    placeholder={`nome${EMAIL_DOMAIN}`}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password2">Senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="password2"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((s) => !s)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{PASSWORD_RULE_MESSAGE}</p>
+                </div>
+                <Button type="submit" className="w-full" disabled={busy}>
+                  {asDriver ? "Criar conta de motorista" : "Criar conta"}
+                </Button>
+              </form>
+            );
 
   return (
     <div className="min-h-screen">
@@ -183,9 +265,10 @@ function EntrarPage() {
 
         <div className="surface-panel mt-8 p-6">
           <Tabs defaultValue="login">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="signup">Criar conta</TabsTrigger>
+              <TabsTrigger value="signup" onClick={() => setAsDriver(false)}>Criar conta</TabsTrigger>
+              <TabsTrigger value="driver" onClick={() => setAsDriver(true)}>Motorista</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -266,78 +349,12 @@ function EntrarPage() {
             </TabsContent>
 
 
-            <TabsContent value="signup">
-              <form className="mt-5 space-y-4" onSubmit={handleSignUp}>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome completo</Label>
-                  <Input
-                    id="name"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dept">Setor / Diretoria</Label>
-                  <Input
-                    id="dept"
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="regional">Selecionar Regional</Label>
-                  <select
-                    id="regional"
-                    required
-                    value={regional}
-                    onChange={(e) => setRegional(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="" disabled>Selecione…</option>
-                    {REGIONAIS.map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email2">E-mail institucional</Label>
-                  <Input
-                    id="email2"
-                    type="email"
-                    required
-                    placeholder={`nome${EMAIL_DOMAIN}`}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password2">Senha</Label>
-                  <div className="relative">
-                    <Input
-                      id="password2"
-                      type={showPassword ? "text" : "password"}
-                      required
-                      minLength={6}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((s) => !s)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                    >
-                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{PASSWORD_RULE_MESSAGE}</p>
-                </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  Criar conta
-                </Button>
-              </form>
+            <TabsContent value="signup">{signupForm}</TabsContent>
+            <TabsContent value="driver">
+              <p className="mt-4 rounded-md border border-border bg-secondary/50 p-3 text-xs text-muted-foreground">
+                Conta exclusiva para motoristas: não faz solicitações. Ao entrar, você escolhe o veículo e preenche o diário de bordo (início e fim), enviado direto ao gestor.
+              </p>
+              {signupForm}
             </TabsContent>
           </Tabs>
         </div>

@@ -29,6 +29,7 @@ const managerLinks = [
   { to: "/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/frota", label: "Frota", icon: CarFront },
   { to: "/diarios", label: "Diários de bordo", icon: BookOpen },
+  { to: "/diarios-motoristas", label: "Motoristas", icon: CarFront },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/manutencao", label: "Manutenção", icon: Wrench },
   { to: "/notificacoes", label: "Notificações", icon: Bell },
@@ -36,6 +37,8 @@ const managerLinks = [
   { to: "/usuarios", label: "Senhas", icon: Users },
   { to: "/auditoria", label: "Auditoria", icon: FileText },
 ];
+
+const driverLinks = [{ to: "/motorista", label: "Meu diário de bordo", icon: BookOpen }];
 
 const requesterLinks = [
   { to: "/painel", label: "Minhas solicitações", icon: ClipboardList },
@@ -151,7 +154,7 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
                   {auth.user.email}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {auth.isManager ? "Gestor de frota" : "Solicitante"}
+                  {auth.isManager ? "Gestor de frota" : auth.isDriver ? "Motorista" : "Solicitante"}
                 </p>
               </div>
               <Button

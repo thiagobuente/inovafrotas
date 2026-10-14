@@ -12,6 +12,7 @@ type Item = {
   title: string;
   body: string;
   protocol: string | null;
+  event_type: string;
   read_at: string | null;
   created_at: string;
 };
@@ -35,7 +36,7 @@ export function NotificationBell({ email, isManager }: { email: string; isManage
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_notifications")
-        .select("id, title, body, protocol, read_at, created_at")
+        .select("id, title, body, protocol, event_type, read_at, created_at")
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
