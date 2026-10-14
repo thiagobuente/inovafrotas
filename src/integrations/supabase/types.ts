@@ -581,7 +581,7 @@ export type Database = {
       manager_exists: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "manager" | "requester"
+      app_role: "manager" | "requester" | "driver"
       request_status:
         | "pending"
         | "approved"
@@ -716,7 +716,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["manager", "requester"],
+      app_role: ["manager", "requester", "driver"],
       request_status: [
         "pending",
         "approved",
