@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -67,6 +67,68 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      driver_trip_logs: {
+        Row: {
+          created_at: string
+          departure_at: string | null
+          departure_km: number | null
+          destination: string | null
+          driver_email: string
+          driver_id: string
+          driver_name: string
+          id: string
+          incidents: string | null
+          photo_paths: string[]
+          return_at: string | null
+          return_km: number | null
+          status: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          departure_at?: string | null
+          departure_km?: number | null
+          destination?: string | null
+          driver_email: string
+          driver_id?: string
+          driver_name?: string
+          id?: string
+          incidents?: string | null
+          photo_paths?: string[]
+          return_at?: string | null
+          return_km?: number | null
+          status?: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          departure_at?: string | null
+          departure_km?: number | null
+          destination?: string | null
+          driver_email?: string
+          driver_id?: string
+          driver_name?: string
+          id?: string
+          incidents?: string | null
+          photo_paths?: string[]
+          return_at?: string | null
+          return_km?: number | null
+          status?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_trip_logs_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       drivers: {
         Row: {
@@ -565,6 +627,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_driver_role: { Args: never; Returns: boolean }
       claim_first_manager: { Args: never; Returns: boolean }
       consume_rate_limit: {
         Args: { _key: string; _limit: number; _window_seconds: number }
@@ -581,7 +644,7 @@ export type Database = {
       manager_exists: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "manager" | "requester"
+      app_role: "manager" | "requester" | "driver"
       request_status:
         | "pending"
         | "approved"
@@ -716,7 +779,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["manager", "requester"],
+      app_role: ["manager", "requester", "driver"],
       request_status: [
         "pending",
         "approved",

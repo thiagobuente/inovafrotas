@@ -25,6 +25,11 @@ export function MobileBottomNav({ auth }: { auth: SeiaAuth }) {
     { to: "/notificacoes", label: "Avisos", icon: Bell },
   ];
 
+  const driverLinks = [
+    { to: "/motorista", label: "Diário", icon: BookOpen },
+    { to: "/notificacoes", label: "Avisos", icon: Bell },
+  ];
+
   const managerLinks = [
     { to: "/gestao", label: "Autorizar", icon: ClipboardList },
     { to: "/agenda", label: "Agenda", icon: CalendarDays },
@@ -34,7 +39,7 @@ export function MobileBottomNav({ auth }: { auth: SeiaAuth }) {
     { to: "/notificacoes", label: "Avisos", icon: Bell },
   ];
 
-  const links = auth.isManager ? managerLinks : requesterLinks;
+  const links = auth.isManager ? managerLinks : auth.isDriver ? driverLinks : requesterLinks;
 
   return (
     <nav

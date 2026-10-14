@@ -12,6 +12,7 @@ export type SeiaAuth = {
   session: Session | null;
   user: User | null;
   isManager: boolean;
+  isDriver: boolean;
   roleLoaded: boolean;
   loading: boolean;
 };
@@ -19,6 +20,7 @@ export type SeiaAuth = {
 export function useSeiaAuth(): SeiaAuth {
   const [session, setSession] = useState<Session | null>(null);
   const [isManager, setIsManager] = useState(false);
+  const [isDriver, setIsDriver] = useState(false);
   const [roleLoaded, setRoleLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -40,6 +42,7 @@ export function useSeiaAuth(): SeiaAuth {
     const userId = session?.user?.id;
     if (!userId) {
       setIsManager(false);
+      setIsDriver(false);
       setRoleLoaded(false);
       return;
     }
@@ -49,11 +52,11 @@ export function useSeiaAuth(): SeiaAuth {
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .eq("role", "manager")
-      .maybeSingle()
       .then(({ data }) => {
         if (active) {
-          setIsManager(Boolean(data));
+          const roles = (data ?? []).map((r) => r.role as string);
+          setIsManager(roles.includes("manager"));
+          setIsDriver(!roles.includes("manager") && roles.includes("driver"));
           setRoleLoaded(true);
         }
       });
@@ -62,7 +65,7 @@ export function useSeiaAuth(): SeiaAuth {
     };
   }, [session?.user?.id]);
 
-  return { session, user: session?.user ?? null, isManager, roleLoaded, loading };
+  return { session, user: session?.user ?? null, isManager, isDriver, roleLoaded, loading };
 }
 
 export const STATUS_LABELS: Record<string, string> = {
