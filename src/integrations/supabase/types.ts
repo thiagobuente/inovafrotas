@@ -68,6 +68,68 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_trip_logs: {
+        Row: {
+          created_at: string
+          departure_at: string | null
+          departure_km: number | null
+          destination: string | null
+          driver_email: string
+          driver_id: string
+          driver_name: string
+          id: string
+          incidents: string | null
+          photo_paths: string[]
+          return_at: string | null
+          return_km: number | null
+          status: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          departure_at?: string | null
+          departure_km?: number | null
+          destination?: string | null
+          driver_email: string
+          driver_id?: string
+          driver_name?: string
+          id?: string
+          incidents?: string | null
+          photo_paths?: string[]
+          return_at?: string | null
+          return_km?: number | null
+          status?: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          departure_at?: string | null
+          departure_km?: number | null
+          destination?: string | null
+          driver_email?: string
+          driver_id?: string
+          driver_name?: string
+          id?: string
+          incidents?: string | null
+          photo_paths?: string[]
+          return_at?: string | null
+          return_km?: number | null
+          status?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_trip_logs_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           created_at: string
@@ -565,6 +627,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_driver_role: { Args: never; Returns: boolean }
       claim_first_manager: { Args: never; Returns: boolean }
       consume_rate_limit: {
         Args: { _key: string; _limit: number; _window_seconds: number }
