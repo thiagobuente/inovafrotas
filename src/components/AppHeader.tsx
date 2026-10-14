@@ -46,7 +46,7 @@ export function AppHeader({ auth }: { auth: SeiaAuth }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const links = auth.isManager ? managerLinks : requesterLinks;
+  const links = auth.isManager ? managerLinks : auth.isDriver ? driverLinks : requesterLinks;
 
   async function signOut() {
     await supabase.auth.signOut();

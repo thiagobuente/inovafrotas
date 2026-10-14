@@ -34,7 +34,7 @@ export function MobileBottomNav({ auth }: { auth: SeiaAuth }) {
     { to: "/notificacoes", label: "Avisos", icon: Bell },
   ];
 
-  const links = auth.isManager ? managerLinks : requesterLinks;
+  const links = auth.isManager ? managerLinks : auth.isDriver ? driverLinks : requesterLinks;
 
   return (
     <nav

@@ -66,6 +66,10 @@ export function NotificationBell({ email, isManager }: { email: string; isManage
         .eq("id", item.id);
       queryClient.invalidateQueries({ queryKey: ["user-notifications", email] });
     }
+    if (isManager && item.event_type === "driver_trip_log") {
+      navigate({ to: "/diarios-motoristas" });
+      return;
+    }
     navigate({
       to: isManager ? "/gestao" : "/painel",
       search: { status: "all", protocol: item.protocol ?? undefined },
