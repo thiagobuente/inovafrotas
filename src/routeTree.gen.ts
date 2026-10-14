@@ -14,11 +14,13 @@ import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AuditoriaRouteImport } from './routes/auditoria'
 import { Route as ConfiguracoesEmailRouteImport } from './routes/configuracoes-email'
 import { Route as DiariosRouteImport } from './routes/diarios'
+import { Route as DiariosMotoristasRouteImport } from './routes/diarios-motoristas'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as FrotaRouteImport } from './routes/frota'
 import { Route as GestaoRouteImport } from './routes/gestao'
 import { Route as ManutencaoRouteImport } from './routes/manutencao'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as MotoristaRouteImport } from './routes/motorista'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as PainelRouteImport } from './routes/painel'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
@@ -57,6 +59,11 @@ const DiariosRoute = DiariosRouteImport.update({
   path: '/diarios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DiariosMotoristasRoute = DiariosMotoristasRouteImport.update({
+  id: '/diarios-motoristas',
+  path: '/diarios-motoristas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntrarRoute = EntrarRouteImport.update({
   id: '/entrar',
   path: '/entrar',
@@ -80,6 +87,11 @@ const ManutencaoRoute = ManutencaoRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MotoristaRoute = MotoristaRouteImport.update({
+  id: '/motorista',
+  path: '/motorista',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificacoesRoute = NotificacoesRouteImport.update({
@@ -152,11 +164,13 @@ export interface FileRoutesByFullPath {
   '/auditoria': typeof AuditoriaRoute
   '/configuracoes-email': typeof ConfiguracoesEmailRoute
   '/diarios': typeof DiariosRoute
+  '/diarios-motoristas': typeof DiariosMotoristasRoute
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
   '/manutencao': typeof ManutencaoRoute
   '/mcp': typeof McpRoute
+  '/motorista': typeof MotoristaRoute
   '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
@@ -176,11 +190,13 @@ export interface FileRoutesByTo {
   '/auditoria': typeof AuditoriaRoute
   '/configuracoes-email': typeof ConfiguracoesEmailRoute
   '/diarios': typeof DiariosRoute
+  '/diarios-motoristas': typeof DiariosMotoristasRoute
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
   '/manutencao': typeof ManutencaoRoute
   '/mcp': typeof McpRoute
+  '/motorista': typeof MotoristaRoute
   '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
@@ -201,11 +217,13 @@ export interface FileRoutesById {
   '/auditoria': typeof AuditoriaRoute
   '/configuracoes-email': typeof ConfiguracoesEmailRoute
   '/diarios': typeof DiariosRoute
+  '/diarios-motoristas': typeof DiariosMotoristasRoute
   '/entrar': typeof EntrarRoute
   '/frota': typeof FrotaRoute
   '/gestao': typeof GestaoRoute
   '/manutencao': typeof ManutencaoRoute
   '/mcp': typeof McpRoute
+  '/motorista': typeof MotoristaRoute
   '/notificacoes': typeof NotificacoesRoute
   '/painel': typeof PainelRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
@@ -227,11 +245,13 @@ export interface FileRouteTypes {
     | '/auditoria'
     | '/configuracoes-email'
     | '/diarios'
+    | '/diarios-motoristas'
     | '/entrar'
     | '/frota'
     | '/gestao'
     | '/manutencao'
     | '/mcp'
+    | '/motorista'
     | '/notificacoes'
     | '/painel'
     | '/redefinir-senha'
@@ -251,11 +271,13 @@ export interface FileRouteTypes {
     | '/auditoria'
     | '/configuracoes-email'
     | '/diarios'
+    | '/diarios-motoristas'
     | '/entrar'
     | '/frota'
     | '/gestao'
     | '/manutencao'
     | '/mcp'
+    | '/motorista'
     | '/notificacoes'
     | '/painel'
     | '/redefinir-senha'
@@ -275,11 +297,13 @@ export interface FileRouteTypes {
     | '/auditoria'
     | '/configuracoes-email'
     | '/diarios'
+    | '/diarios-motoristas'
     | '/entrar'
     | '/frota'
     | '/gestao'
     | '/manutencao'
     | '/mcp'
+    | '/motorista'
     | '/notificacoes'
     | '/painel'
     | '/redefinir-senha'
@@ -300,11 +324,13 @@ export interface RootRouteChildren {
   AuditoriaRoute: typeof AuditoriaRoute
   ConfiguracoesEmailRoute: typeof ConfiguracoesEmailRoute
   DiariosRoute: typeof DiariosRoute
+  DiariosMotoristasRoute: typeof DiariosMotoristasRoute
   EntrarRoute: typeof EntrarRoute
   FrotaRoute: typeof FrotaRoute
   GestaoRoute: typeof GestaoRoute
   ManutencaoRoute: typeof ManutencaoRoute
   McpRoute: typeof McpRoute
+  MotoristaRoute: typeof MotoristaRoute
   NotificacoesRoute: typeof NotificacoesRoute
   PainelRoute: typeof PainelRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
@@ -356,6 +382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DiariosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/diarios-motoristas': {
+      id: '/diarios-motoristas'
+      path: '/diarios-motoristas'
+      fullPath: '/diarios-motoristas'
+      preLoaderRoute: typeof DiariosMotoristasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entrar': {
       id: '/entrar'
       path: '/entrar'
@@ -389,6 +422,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/motorista': {
+      id: '/motorista'
+      path: '/motorista'
+      fullPath: '/motorista'
+      preLoaderRoute: typeof MotoristaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notificacoes': {
@@ -484,11 +524,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuditoriaRoute: AuditoriaRoute,
   ConfiguracoesEmailRoute: ConfiguracoesEmailRoute,
   DiariosRoute: DiariosRoute,
+  DiariosMotoristasRoute: DiariosMotoristasRoute,
   EntrarRoute: EntrarRoute,
   FrotaRoute: FrotaRoute,
   GestaoRoute: GestaoRoute,
   ManutencaoRoute: ManutencaoRoute,
   McpRoute: McpRoute,
+  MotoristaRoute: MotoristaRoute,
   NotificacoesRoute: NotificacoesRoute,
   PainelRoute: PainelRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
