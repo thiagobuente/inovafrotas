@@ -15,6 +15,13 @@
       "when": 1791980584921,
       "tag": "0001_driver_trip_logs",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792066395597,
+      "tag": "0002_drivers_read_all_vehicles",
+      "breakpoints": true
     }
   ]
 }

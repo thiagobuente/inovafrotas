@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "drivers read vehicles" ON public.vehicles;
+CREATE POLICY "drivers read vehicles" ON public.vehicles FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'driver'::app_role));

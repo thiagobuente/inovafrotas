@@ -86,7 +86,7 @@ function MotoristaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vehicles")
-        .select("id, plate, brand, model")
+        .select("id, plate, brand, model, status")
         .order("plate");
       if (error) throw error;
       return data;
@@ -253,6 +253,7 @@ function MotoristaPage() {
                   {vehicles.data?.map((v) => (
                     <option key={v.id} value={v.id}>
                       {v.brand} {v.model} · {v.plate}
+                      {v.status === "in_use" ? " (em uso)" : v.status === "maintenance" ? " (manutenção)" : v.status === "inactive" ? " (inativo)" : ""}
                     </option>
                   ))}
                 </select>
