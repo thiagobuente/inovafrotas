@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSeiaAuth, formatDateTime } from "@/lib/seia";
+import { emailDriverLog } from "@/lib/triplog.functions";
 
 export const Route = createFileRoute("/motorista")({
   head: () => ({
@@ -138,6 +139,7 @@ function MotoristaPage() {
         photo_paths: photos,
       });
       if (error) throw error;
+      emailDriverLog({ data: { logId: key } }).catch((e) => console.error("[motorista:email]", e));
       toast.success("Início da viagem registrado e enviado ao gestor.");
       reset();
       qc.invalidateQueries({ queryKey: ["driver-logs"] });
@@ -168,6 +170,8 @@ function MotoristaPage() {
         })
         .eq("id", open.id);
       if (error) throw error;
+      const closedId = open.id;
+      emailDriverLog({ data: { logId: closedId } }).catch((e) => console.error("[motorista:email]", e));
       toast.success("Diário de bordo concluído e enviado ao gestor.");
       reset();
       qc.invalidateQueries({ queryKey: ["driver-logs"] });
