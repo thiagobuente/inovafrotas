@@ -67,3 +67,42 @@ export const emailTripLog = createServerFn({ method: "POST" })
       ),
     });
   });
+
+/** Envia ao gestor o diário do motorista (início ou conclusão) com as fotos. */
+export const emailDriverLog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { logId: string }) => {
+    if (!input?.logId) throw new Error("Diário inválido.");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { data: log, error } = await context.supabase
+      .from("driver_trip_logs")
+      .select("*, vehicles(plate, brand, model)")
+      .eq("id", data.logId)
+      .maybeSingle();
+    if (error) throw new Error(`Não foi possível ler o diário: ${error.message}`);
+    if (!log) throw new Error("Diário não encontrado ou sem permissão.");
+    const v = log.vehicles as unknown as { plate: string; brand: string; model: string } | null;
+    const closed = log.status === "closed";
+    const { sendTripLogEmail } = await import("@/lib/notifications/triplog-email.server");
+    return sendTripLogEmail({
+      protocol: `Motorista ${closed ? "(concluído)" : "(saída)"} · ${v?.plate ?? ""}`,
+      requesterEmail: log.driver_email,
+      agenda: closed ? "Diário de bordo do motorista concluído" : "Motorista iniciou viagem",
+      destination: log.destination ?? "—",
+      pickupAt: log.departure_at ?? "",
+      returnPlannedAt: log.return_at ?? "",
+      vehicle: v ? `${v.brand} ${v.model} · ${v.plate}` : null,
+      driver: log.driver_name || log.driver_email,
+      departureAt: log.departure_at,
+      departureKm: log.departure_km,
+      returnAt: log.return_at,
+      returnKm: log.return_km,
+      incidents: log.incidents,
+      photoPaths: (log.photo_paths ?? []).filter(
+        (p: string) =>
+          typeof p === "string" && !p.includes("..") && p.startsWith(`${log.driver_id}/motorista/${log.id}/`),
+      ),
+    });
+  });
