@@ -188,6 +188,7 @@ function MotoristaPage() {
         <Camera className="size-4" /> {label}
       </Label>
       <Input
+        key={label}
         id="fotos"
         type="file"
         accept="image/*"
