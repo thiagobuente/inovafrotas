@@ -189,7 +189,7 @@ function Index() {
       </main>
 
       <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
-        SEIA — Gestão de frota
+        SEIA — Gestão de frotas
       </footer>
     </div>
   );
