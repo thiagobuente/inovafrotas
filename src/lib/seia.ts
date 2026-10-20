@@ -59,18 +59,23 @@ export function useSeiaAuth(): SeiaAuth {
     }
     setRoleLoaded(false);
     let active = true;
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .then(({ data }) => {
-        if (active) {
-          const roles = (data ?? []).map((r) => r.role as string);
-          setIsManager(roles.includes("manager"));
-          setIsDriver(!roles.includes("manager") && roles.includes("driver"));
-          setRoleLoaded(true);
-        }
-      });
+    try {
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .then(({ data }) => {
+          if (active) {
+            const roles = (data ?? []).map((r) => r.role as string);
+            setIsManager(roles.includes("manager"));
+            setIsDriver(!roles.includes("manager") && roles.includes("driver"));
+            setRoleLoaded(true);
+          }
+        });
+    } catch (error) {
+      console.error("[SEIA] falha ao carregar papel", error);
+      setRoleLoaded(true);
+    }
     return () => {
       active = false;
     };
