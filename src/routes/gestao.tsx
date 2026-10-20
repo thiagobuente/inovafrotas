@@ -4,7 +4,7 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Inbox, UserRound } from "lucide-react";
+import { Inbox, UserRound, X, Undo2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +24,7 @@ import { useSeiaAuth, STATUS_LABELS, STATUS_TONE, formatDateTime } from "@/lib/s
 import { cn } from "@/lib/utils";
 import { sendNotification } from "@/lib/notifications.functions";
 import { syncRequestToCalendar } from "@/lib/calendar.functions";
+import { filterManagerRequests } from "@/lib/manager-request-visibility";
 
 const MANAGER_TABS = [
   { value: "pending", label: "Pendentes" },
@@ -31,6 +32,7 @@ const MANAGER_TABS = [
   { value: "rejected", label: "Recusadas" },
   { value: "cancelled", label: "Canceladas" },
   { value: "all", label: "Todas" },
+  { value: "hidden", label: "Ocultas" },
 ] as const;
 
 
@@ -93,6 +95,28 @@ function GestaoPage() {
   const { status: tab, protocol: focusProtocol } = Route.useSearch();
   const notify = useServerFn(sendNotification);
   const syncCalendar = useServerFn(syncRequestToCalendar);
+  const [visibilitySavingId, setVisibilitySavingId] = useState<string | null>(null);
+
+  async function setRequestHidden(requestId: string, hidden: boolean) {
+    if (!auth.isManager || !auth.user || visibilitySavingId) return;
+    setVisibilitySavingId(requestId);
+    try {
+      const query = hidden
+        ? supabase.from("manager_hidden_requests").insert({ request_id: requestId, hidden_by: auth.user.id }).select("request_id").single()
+        : supabase.from("manager_hidden_requests").delete().eq("request_id", requestId).select("request_id").single();
+      const { error } = await query;
+      if (error) throw error;
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["all-requests"] }),
+        queryClient.invalidateQueries({ queryKey: ["request-counts"] }),
+      ]);
+      toast.success(hidden ? "Solicitação ocultada. Histórico e diário preservados." : "Solicitação restaurada no painel.");
+    } catch {
+      toast.error("Não foi possível atualizar a lista. Tente novamente.");
+    } finally {
+      setVisibilitySavingId(null);
+    }
+  }
 
   useEffect(() => {
     if (!auth.loading && !auth.user) navigate({ to: "/entrar", replace: true });
@@ -102,17 +126,19 @@ function GestaoPage() {
     navigate({ to: "/gestao", search: { status: value }, replace: true });
 
   const { data: requests, isLoading } = useQuery({
-    queryKey: ["all-requests", tab],
+    queryKey: ["all-requests", auth.user?.id, tab],
     enabled: Boolean(auth.user) && auth.isManager,
     queryFn: async () => {
+      const { data: hidden, error: hiddenError } = await supabase.from("manager_hidden_requests").select("request_id");
+      if (hiddenError) throw hiddenError;
       let query = supabase
         .from("vehicle_requests")
         .select("*, vehicles:assigned_vehicle_id (plate, brand, model), drivers:assigned_driver_id (full_name)")
         .order("created_at", { ascending: false });
-      if (tab !== "all") query = query.eq("status", tab as "pending");
+      if (tab !== "all" && tab !== "hidden") query = query.eq("status", tab as "pending");
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return filterManagerRequests(data ?? [], new Set((hidden ?? []).map((row) => row.request_id)), tab === "hidden");
     },
   });
 
@@ -138,12 +164,14 @@ function GestaoPage() {
   }, [focusProtocol, requests]);
 
   const { data: counts } = useQuery({
-    queryKey: ["request-counts"],
+    queryKey: ["request-counts", auth.user?.id],
     enabled: Boolean(auth.user) && auth.isManager,
     queryFn: async () => {
-      const { data, error } = await supabase.from("vehicle_requests").select("status");
+      const { data: hidden, error: hiddenError } = await supabase.from("manager_hidden_requests").select("request_id");
+      if (hiddenError) throw hiddenError;
+      const { data, error } = await supabase.from("vehicle_requests").select("id, status");
       if (error) throw error;
-      return (data ?? []).reduce<Record<string, number>>((acc, row) => {
+      return filterManagerRequests(data ?? [], new Set((hidden ?? []).map((row) => row.request_id))).reduce<Record<string, number>>((acc, row) => {
         acc[row.status] = (acc[row.status] ?? 0) + 1;
         return acc;
       }, {});
@@ -346,7 +374,7 @@ function GestaoPage() {
         </div>
 
         <Tabs value={tab} onValueChange={setTab} className="mt-8">
-          <TabsList>
+          <TabsList className="h-auto flex-wrap">
             {MANAGER_TABS.map((t) => (
               <TabsTrigger key={t.value} value={t.value}>
                 {t.label}
@@ -382,6 +410,9 @@ function GestaoPage() {
                 onDecide={decide}
                 highlight={focusProtocol === r.protocol}
                 regional={regionais?.[r.requester_id] ?? null}
+                hidden={tab === "hidden"}
+                visibilitySaving={visibilitySavingId === r.id}
+                onVisibilityChange={() => setRequestHidden(r.id, tab !== "hidden")}
               />
             ))}
           </TabsContent>
@@ -414,7 +445,13 @@ function RequestCard({
   onDecide,
   highlight,
   regional,
+  hidden,
+  visibilitySaving,
+  onVisibilityChange,
 }: {
+  hidden: boolean;
+  visibilitySaving: boolean;
+  onVisibilityChange: () => Promise<void>;
   highlight?: boolean;
   regional?: string | null;
   request: Record<string, any>;
@@ -472,11 +509,23 @@ function RequestCard({
             </p>
           )}
         </div>
+        <div className="flex items-center gap-2">
         <span
           className={cn("rounded-full border px-3 py-1 text-xs font-medium", STATUS_TONE[request.status])}
         >
           {STATUS_LABELS[request.status]}
         </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled={visibilitySaving}
+          onClick={onVisibilityChange}
+          aria-label={hidden ? "Restaurar solicitação no painel" : "Ocultar solicitação do painel"}
+          title={hidden ? "Restaurar solicitação no painel" : "Ocultar solicitação do painel"}
+        >
+          {hidden ? <Undo2 className="size-4" /> : <X className="size-4" />}
+        </Button>
+        </div>
       </div>
 
       <p className="mt-3 text-sm text-muted-foreground">{request.agenda}</p>
