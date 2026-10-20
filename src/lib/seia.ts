@@ -25,17 +25,28 @@ export function useSeiaAuth(): SeiaAuth {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
-      setSession(next);
-      setLoading(false);
-    });
+    let unsubscribe: (() => void) | undefined;
+    try {
+      const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+        setSession(next);
+        setLoading(false);
+      });
+      unsubscribe = () => sub.subscription.unsubscribe();
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+      supabase.auth
+        .getSession()
+        .then(({ data }) => {
+          setSession(data.session);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    } catch (error) {
+      // Backend config missing in this build: keep the page usable instead of blanking.
+      console.error("[SEIA] backend indisponível", error);
       setLoading(false);
-    });
+    }
 
-    return () => sub.subscription.unsubscribe();
+    return () => unsubscribe?.();
   }, []);
 
   useEffect(() => {
@@ -48,18 +59,23 @@ export function useSeiaAuth(): SeiaAuth {
     }
     setRoleLoaded(false);
     let active = true;
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .then(({ data }) => {
-        if (active) {
-          const roles = (data ?? []).map((r) => r.role as string);
-          setIsManager(roles.includes("manager"));
-          setIsDriver(!roles.includes("manager") && roles.includes("driver"));
-          setRoleLoaded(true);
-        }
-      });
+    try {
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .then(({ data }) => {
+          if (active) {
+            const roles = (data ?? []).map((r) => r.role as string);
+            setIsManager(roles.includes("manager"));
+            setIsDriver(!roles.includes("manager") && roles.includes("driver"));
+            setRoleLoaded(true);
+          }
+        });
+    } catch (error) {
+      console.error("[SEIA] falha ao carregar papel", error);
+      setRoleLoaded(true);
+    }
     return () => {
       active = false;
     };
