@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Store manager-panel hiding separately in `manager_hidden_requests`; filter only the authorization list and its counters so requester history, reservations, reports, and logbooks remain unchanged.

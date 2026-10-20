@@ -267,6 +267,32 @@ export type Database = {
           },
         ]
       }
+      manager_hidden_requests: {
+        Row: {
+          hidden_at: string
+          hidden_by: string
+          request_id: string
+        }
+        Insert: {
+          hidden_at?: string
+          hidden_by?: string
+          request_id: string
+        }
+        Update: {
+          hidden_at?: string
+          hidden_by?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manager_hidden_requests_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "vehicle_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_logs: {
         Row: {
           audience: string
