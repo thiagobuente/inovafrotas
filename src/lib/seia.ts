@@ -25,17 +25,28 @@ export function useSeiaAuth(): SeiaAuth {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
-      setSession(next);
-      setLoading(false);
-    });
+    let unsubscribe: (() => void) | undefined;
+    try {
+      const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+        setSession(next);
+        setLoading(false);
+      });
+      unsubscribe = () => sub.subscription.unsubscribe();
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+      supabase.auth
+        .getSession()
+        .then(({ data }) => {
+          setSession(data.session);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    } catch (error) {
+      // Backend config missing in this build: keep the page usable instead of blanking.
+      console.error("[SEIA] backend indisponível", error);
       setLoading(false);
-    });
+    }
 
-    return () => sub.subscription.unsubscribe();
+    return () => unsubscribe?.();
   }, []);
 
   useEffect(() => {
