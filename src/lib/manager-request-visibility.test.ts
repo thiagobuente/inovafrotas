@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test";
+import { describe, test } from "node:test";
+import { deepStrictEqual, strictEqual } from "node:assert";
 import { filterManagerRequests } from "./manager-request-visibility";
 
 describe("manager request visibility", () => {
@@ -6,11 +7,11 @@ describe("manager request visibility", () => {
   const hidden = new Set(["old"]);
 
   test("hidden requests are removed only from the manager list", () => {
-    expect(filterManagerRequests(requests, hidden)).toEqual([{ id: "new", status: "pending" }]);
+    deepStrictEqual(filterManagerRequests(requests, hidden), [{ id: "new", status: "pending" }]);
   });
   test("preserves hidden records and allows them to be restored", () => {
-    expect(filterManagerRequests(requests, hidden, true)).toEqual([{ id: "old", status: "approved" }]);
-    expect(requests).toHaveLength(2);
-    expect(filterManagerRequests(requests, new Set())).toEqual(requests);
+    deepStrictEqual(filterManagerRequests(requests, hidden, true), [{ id: "old", status: "approved" }]);
+    strictEqual(requests.length, 2);
+    deepStrictEqual(filterManagerRequests(requests, new Set()), requests);
   });
 });
