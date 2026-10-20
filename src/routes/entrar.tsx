@@ -192,7 +192,7 @@ function EntrarPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="dept">Setor / Diretoria</Label>
+                  <Label htmlFor="dept">Setor</Label>
                   <Input
                     id="dept"
                     value={department}
